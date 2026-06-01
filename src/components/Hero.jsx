@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { Box, Lock, Clock, Cloud, Star, ArrowRight } from 'lucide-react'
+import HeroAIChat from './HeroAIChat.jsx'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
@@ -336,6 +337,9 @@ export default function Hero() {
         </div>
 
       </div>
+
+      {/* ── AI Chat (desktop only) ─────────────────────────────── */}
+      <HeroAIChat />
 
       {/* ── Left arrow (desktop only) ───────────────────────────── */}
       <button

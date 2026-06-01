@@ -488,15 +488,14 @@ export default function AiChat() {
           {/* Horizontal row: support buttons grow to the left, AI FAB slides with them */}
           <motion.div
             layout
-            transition={{ type:'spring', stiffness:500, damping:24, mass:0.55 }}
+            transition={{ type:'spring', stiffness:220, damping:34, mass:1.1 }}
             style={{ display:'flex', alignItems:'center', gap:10 }}
           >
 
           {/* ── AI FAB — slides left when support cluster opens, bounces back on close ── */}
           <motion.button
             layout
-            layoutId="ai-fab"
-            transition={{ type:'spring', stiffness:520, damping:22, mass:0.6 }}
+            transition={{ type:'spring', stiffness:220, damping:34, mass:1.1 }}
             onClick={() => { setOpen(o => !o); if (supportOpen) setSupportOpen(false); }}
             whileHover={{ scale:1.07 }}
             whileTap={{ scale:0.88 }}

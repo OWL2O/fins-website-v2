@@ -1,0 +1,247 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'BPG Banner Caps';
+  src: url('/fonts/bpg_banner_caps.ttf') format('truetype');
+  /* Single file mapped to the full weight range so any requested weight
+     (e.g. 500/Medium) renders directly from the file without faux-bold. */
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* FAQ section pulsing dot — subtle ripple on the brand-blue dot before "FAQ". */
+@keyframes faq-dot-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.2); opacity: 0.4; }
+}
+.faq-dot-pulse {
+  animation: faq-dot-pulse 2s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* Force-override class — wins over any Tailwind font utility */
+.font-banner {
+  font-family: 'BPG Banner Caps', 'Noto Sans Georgian', system-ui, sans-serif !important;
+}
+
+:root {
+  font-family: 'Noto Sans Georgian', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+html {
+  scroll-behavior: auto;
+  background: #0F141B;
+}
+
+body {
+  margin: 0;
+  background: #0F141B;
+  color: #0A0E1A;
+  font-family: 'Noto Sans Georgian', system-ui, sans-serif;
+}
+
+/* Subtle animated dot pulse */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+.dot-pulse { animation: pulse-dot 2s ease-in-out infinite; }
+
+/* Crisp PNG rendering for the dashboard image — cascades multiple
+   image-rendering values so each browser picks the best one it supports. */
+.dashboard-img-crisp {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  /* `pixelated` left out intentionally — it nukes sub-pixel anti-aliasing
+     which is fine for pixel art but makes UI screenshots look jagged. */
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  filter: none !important;
+}
+
+/* Independent float animations for the two dashboard overlay cards.
+   Distinct ranges, durations, and offset delays so they never sync up. */
+@keyframes dashboard-float-a {
+  0%, 100% { transform: translateY(-4px) translateZ(0); }
+  50%      { transform: translateY(4px) translateZ(0); }
+}
+@keyframes dashboard-float-b {
+  0%, 100% { transform: translateY(-5px) translateZ(0); }
+  50%      { transform: translateY(5px) translateZ(0); }
+}
+.dashboard-float-a {
+  animation: dashboard-float-a 5s ease-in-out infinite;
+  will-change: transform;
+}
+.dashboard-float-b {
+  animation: dashboard-float-b 6.5s ease-in-out infinite 1.2s;
+  will-change: transform;
+}
+
+/* Subtle organic float for the 5 statistic cards.
+   5 variants — each card gets a slightly different translateY + rotate so
+   they breathe independently rather than in unison. */
+@keyframes stat-float-a {
+  0%, 100% { transform: translateY(0) rotate(0deg) translateZ(0); }
+  50%      { transform: translateY(-7px) rotate(0.5deg) translateZ(0); }
+}
+@keyframes stat-float-b {
+  0%, 100% { transform: translateY(0) rotate(0deg) translateZ(0); }
+  50%      { transform: translateY(-6px) rotate(-0.4deg) translateZ(0); }
+}
+@keyframes stat-float-c {
+  0%, 100% { transform: translateY(0) rotate(0deg) translateZ(0); }
+  50%      { transform: translateY(-8px) rotate(0.3deg) translateZ(0); }
+}
+@keyframes stat-float-d {
+  0%, 100% { transform: translateY(0) rotate(0deg) translateZ(0); }
+  50%      { transform: translateY(-5px) rotate(-0.5deg) translateZ(0); }
+}
+@keyframes stat-float-e {
+  0%, 100% { transform: translateY(0) rotate(0deg) translateZ(0); }
+  50%      { transform: translateY(-7px) rotate(0.4deg) translateZ(0); }
+}
+.stat-float {
+  animation-duration: 5s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  will-change: transform;
+  /* On hover, the animation is removed and this transition smoothly eases
+     the card back from whatever frame it was on to identity transform. */
+  transition: transform 0.4s ease-out;
+}
+.stat-float-a { animation-name: stat-float-a; }
+.stat-float-b { animation-name: stat-float-b; }
+.stat-float-c { animation-name: stat-float-c; }
+.stat-float-d { animation-name: stat-float-d; }
+.stat-float-e { animation-name: stat-float-e; }
+.stat-float:hover {
+  animation: none;
+  transform: translateY(0) rotate(0deg);
+}
+
+
+/* Chat widget slide-up entrance */
+@keyframes chat-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-chat-in {
+  animation: chat-in 0.25s ease-out both;
+}
+
+/* Animated burger icon */
+.burger-line {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 1px;
+  background: #fff;
+  position: relative;
+  transition: all 0.3s;
+}
+.burger-line + .burger-line {
+  margin-top: 5px;
+}
+
+.burger-active .burger-top {
+  animation: burger-top 0.7s ease forwards;
+}
+.burger-not-active .burger-top {
+  animation: burger-top-rev 0.7s ease forwards;
+}
+
+.burger-active .burger-mid {
+  animation: burger-mid 0.7s ease forwards;
+}
+.burger-not-active .burger-mid {
+  animation: burger-mid-rev 0.7s ease forwards;
+}
+
+.burger-active .burger-bot {
+  animation: burger-bot 0.7s ease forwards;
+}
+.burger-not-active .burger-bot {
+  animation: burger-bot-rev 0.7s ease forwards;
+}
+
+@keyframes burger-top {
+  0%   { top: 0; transform: rotate(0); }
+  50%  { top: 7px; transform: rotate(0); }
+  100% { top: 7px; transform: rotate(45deg); }
+}
+@keyframes burger-top-rev {
+  0%   { top: 7px; transform: rotate(45deg); }
+  50%  { top: 7px; transform: rotate(0); }
+  100% { top: 0; transform: rotate(0); }
+}
+
+@keyframes burger-bot {
+  0%   { bottom: 0; transform: rotate(0); }
+  50%  { bottom: 7px; transform: rotate(0); }
+  100% { bottom: 7px; transform: rotate(135deg); }
+}
+@keyframes burger-bot-rev {
+  0%   { bottom: 7px; transform: rotate(135deg); }
+  50%  { bottom: 7px; transform: rotate(0); }
+  100% { bottom: 0; transform: rotate(0); }
+}
+
+@keyframes burger-mid {
+  50%  { transform: scale(0); }
+  100% { transform: scale(0); }
+}
+@keyframes burger-mid-rev {
+  0%   { transform: scale(0); }
+  50%  { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
+
+/* Pricing calculator slider — dark theme */
+.price-slider-dark {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+.price-slider-dark::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(59,91,219,0.45), 0 2px 8px rgba(0,0,0,0.35);
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+.price-slider-dark::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 0 5px rgba(59,91,219,0.35), 0 2px 8px rgba(0,0,0,0.35);
+}
+.price-slider-dark::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  border: none;
+  box-shadow: 0 0 0 3px rgba(59,91,219,0.45), 0 2px 8px rgba(0,0,0,0.35);
+  cursor: pointer;
+}
+
+/* Custom scrollbar (optional polish) */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(15,20,34,0.15); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(15,20,34,0.25); }

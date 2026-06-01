@@ -341,33 +341,41 @@ export default function Hero() {
       <div className="hidden lg:flex relative z-10 w-full mx-auto max-w-[1440px] px-12 xl:px-16 min-[1700px]:px-20 pt-[110px] min-[1700px]:pt-[120px] pb-20 min-[1700px]:pb-28 flex-1 flex-col">
         <div
           data-hero-cards
-          className="mt-auto w-full flex flex-wrap justify-center gap-5"
+          className="mt-auto flex gap-3 xl:gap-3.5 ml-[390px] xl:ml-[445px] min-[1700px]:ml-[510px]"
         >
           {FEATURES.map((f, i) => (
             <div
               key={f.title}
               data-hero-card
               className={[
-                'relative flex flex-col items-center justify-center px-3',
-                'w-[calc(20%-16px)]',
-                'h-[165px] min-[1700px]:h-[180px]',
-                'rounded-2xl border border-white/[0.08] bg-black/35 backdrop-blur-sm',
-                'transition-all duration-300 ease-out',
-                'hover:scale-[1.03] hover:border-white/[0.16] hover:bg-black/45',
+                'relative flex flex-col flex-1',
+                'h-[150px] xl:h-[160px] min-[1700px]:h-[172px]',
+                'rounded-2xl p-4 xl:p-[18px]',
+                'border border-white/[0.08]',
+                'bg-white/[0.04] backdrop-blur-md',
+                'transition-colors duration-250 ease-out',
+                'hover:bg-white/[0.07] hover:border-white/[0.14]',
               ].join(' ')}
             >
+              {/* Live dot on last card */}
               {i === FEATURES.length - 1 && (
-                <span className="absolute top-3 right-3 h-1.5 w-1.5 rounded-full bg-emerald-400 dot-pulse" />
+                <span className="absolute top-3.5 right-3.5 h-1.5 w-1.5 rounded-full bg-emerald-400 dot-pulse" />
               )}
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.06] border border-white/[0.08] mb-2.5">
-                <f.icon size={17} strokeWidth={1.5} className={f.tint} />
+
+              {/* Icon */}
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.07] border border-white/[0.07] mb-auto">
+                <f.icon size={14} strokeWidth={1.5} className={f.tint} />
               </div>
-              <h2 className="text-[13px] min-[1700px]:text-[14px] font-normal text-white leading-snug text-center">
-                {f.title}
-              </h2>
-              <p className="text-[11px] min-[1700px]:text-[12px] font-light text-white/55 leading-normal mt-1.5 text-center">
-                {f.text}
-              </p>
+
+              {/* Text */}
+              <div className="mt-3">
+                <h2 className="text-[12px] xl:text-[12.5px] min-[1700px]:text-[13px] font-semibold text-white/90 leading-snug tracking-normal mb-1">
+                  {f.title}
+                </h2>
+                <p className="text-[10px] xl:text-[10.5px] min-[1700px]:text-[11px] font-light text-white/38 leading-relaxed tracking-normal">
+                  {f.text}
+                </p>
+              </div>
             </div>
           ))}
         </div>

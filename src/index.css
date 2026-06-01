@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Hide scrollbar in webkit browsers for the AI chat message area */
+.fins-msg-area::-webkit-scrollbar { display: none; }
+
+
 @font-face {
   font-family: 'BPG Banner Caps';
   src: url('/fonts/bpg_banner_caps.ttf') format('truetype');

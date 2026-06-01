@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import ScrollToTop from './components/ScrollToTop.jsx'
 import Home from './pages/Home.jsx'
 import Privacy from './pages/Privacy.jsx'
@@ -18,6 +18,8 @@ export default function App() {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/security" element={<Security />} />
+        {/* catch-all: any unknown path → home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   )

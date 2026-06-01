@@ -606,7 +606,7 @@ export default function AiChat() {
                     delay: 0.08,
                     bg: '#E8613C',
                     shadow: 'rgba(232,97,60,0.45)',
-                    action: () => { const a=document.createElement('a'); a.href='https://download.anydesk.com/AnyDesk.exe'; a.download='AnyDesk.exe'; document.body.appendChild(a); a.click(); document.body.removeChild(a); },
+                    action: () => window.open('https://anydesk.com/en/downloads/windows', '_blank'),
                     icon: (
                       // AnyDesk stacked-layers icon
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

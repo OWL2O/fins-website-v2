@@ -109,6 +109,14 @@ export default function Hero() {
     )
   }, [displayLabel])
 
+  // ── Preload next image on demand ─────────────────────────────────────────
+
+  const preloadNext = useCallback((currentIdx) => {
+    const nextIdx = (currentIdx + 1) % PHOTOS.length
+    const img = new Image()
+    img.src = PHOTOS[nextIdx].src
+  }, [])
+
   // ── Crossfade transition ──────────────────────────────────────────────────
 
   const transition = useCallback((nextIdx) => {
@@ -152,15 +160,8 @@ export default function Hero() {
 
   // ── Init ──────────────────────────────────────────────────────────────────
 
-  // Preload next image just before it's needed — avoids loading all 10 upfront
-  const preloadNext = useCallback((currentIdx) => {
-    const nextIdx = (currentIdx + 1) % PHOTOS.length
-    const img = new Image()
-    img.src = PHOTOS[nextIdx].src
-  }, [])
-
   useEffect(() => {
-    // Only eagerly preload the second image; the rest load on demand
+    // Eagerly preload the second image; the rest load on demand via preloadNext
     preloadNext(0)
 
     // Photo initial state — promote each slide to its own compositor layer

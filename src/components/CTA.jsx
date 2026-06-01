@@ -91,13 +91,13 @@ export default function CTA() {
           დაიწყე ბუღალტერიის და საოპერაციო მოდულების მართვა თვეში 60 ლარიდან. რეგისტრაცია მხოლოდ 2 წუთში.
         </p>
 
-        {/* <a
+        <a
           data-scroll-btn
-          href="#contact"
+          href="/contact"
           className="inline-flex items-center justify-center w-[203px] h-[42px] min-[1700px]:h-[52px] rounded-full text-[14px] font-medium leading-none tracking-normal text-white/60 border border-white/30 hover:text-white hover:border-white/60 bg-transparent transition-[background-color,border-color,color,box-shadow] duration-250"
         >
           ჩანიშნე შეხვედრა
-        </a> */}
+        </a>
 
         <div
           data-cta-card

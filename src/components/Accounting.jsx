@@ -86,7 +86,7 @@ export default function Accounting() {
   }, [])
 
   return (
-    <section ref={sectionRef} id="accounting" className="bg-white py-24 sm:py-28 lg:py-32 overflow-clip">
+    <section ref={sectionRef} id="accounting" className="bg-white py-16 sm:py-24 lg:py-32 overflow-clip">
       <div className="max-w-full mx-auto px-5 sm:px-8 lg:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
 
         {/* Left column */}

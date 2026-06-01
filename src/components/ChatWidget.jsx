@@ -6,10 +6,10 @@ export default function ChatWidget() {
   const [stepsOpen, setStepsOpen] = useState(false)
 
   return (
-    <div className="fixed bottom-8 right-8 z-[1000]">
+    <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-[1000]">
       {/* Modal */}
       {open && (
-        <div className="absolute bottom-[66px] right-0 w-[370px] rounded-2xl overflow-hidden shadow-[0_16px_60px_rgba(0,0,0,0.25)] animate-chat-in">
+        <div className="absolute bottom-[66px] right-0 w-[calc(100vw-2rem)] max-w-[370px] rounded-2xl overflow-hidden shadow-[0_16px_60px_rgba(0,0,0,0.25)] animate-chat-in">
           {/* Header */}
           <div
             className="relative px-5 py-4 flex items-center gap-3.5"

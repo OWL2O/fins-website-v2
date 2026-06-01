@@ -18,6 +18,7 @@ const COLUMNS = [
     links: [
       'ჩვენ შესახებ',
       'FAQ',
+      { label: 'კონტაქტი', href: '/contact', internal: true },
       {
         label: 'Facebook',
         href: 'https://www.facebook.com/fins.ge/',
@@ -175,7 +176,7 @@ export default function Footer() {
           </div>
 
           {/* Link columns — 3 cols side by side on phone; lg spans remaining 3 of parent grid */}
-          <div className="grid min-w-0 grid-cols-3 gap-x-2 sm:gap-x-4 lg:col-span-3 lg:gap-8">
+          <div className="grid min-w-0 grid-cols-3 gap-x-3 gap-y-6 sm:gap-x-4 lg:col-span-3 lg:gap-8">
             {COLUMNS.map((col) => (
               <div
                 key={col.title}
@@ -193,7 +194,7 @@ export default function Footer() {
                     const openInNewTab = isObject && link.openInNewTab
                     const internal = isObject && link.internal
 
-                    const className = "block break-words text-[10px] leading-snug tracking-normal text-white/70 transition-colors duration-250 hover:text-white sm:text-[12px]"
+                    const className = "block break-words text-[12px] leading-snug tracking-normal text-white/70 transition-colors duration-250 hover:text-white sm:text-[12px]"
 
                     return (
                       <li key={label} className="min-w-0">

@@ -90,7 +90,7 @@ export default function Services() {
   }, [])
 
   return (
-    <section ref={sectionRef} id="services" className="bg-cream-50 py-24 sm:py-28 lg:py-32">
+    <section ref={sectionRef} id="services" className="bg-cream-50 py-16 sm:py-24 lg:py-32">
       <div className="max-w-full mx-auto px-5 sm:px-8 lg:px-12">
         {/* Header */}
         <div data-svc-header className="flex flex-col items-center text-center gap-6 max-w-2xl lg:max-w-[900px] mx-auto overflow-visible">

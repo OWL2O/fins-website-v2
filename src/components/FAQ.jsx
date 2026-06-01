@@ -88,7 +88,7 @@ export default function FAQ() {
   }, [])
 
   return (
-    <section ref={sectionRef} id="faq" className="bg-cream-50 py-24 sm:py-28 lg:py-32">
+    <section ref={sectionRef} id="faq" className="bg-cream-50 py-16 sm:py-24 lg:py-32">
       <div className="mx-auto px-5 sm:px-8 lg:px-12 max-w-wide grid grid-cols-1 xl:grid-cols-[1fr_2fr] gap-12 xl:gap-x-16 items-start">
         {/* Left column */}
         <div data-faq-left className="flex flex-col items-start text-left gap-6">
@@ -134,10 +134,10 @@ export default function FAQ() {
                   type="button"
                   onClick={() => setOpen(isOpen ? -1 : i)}
                   aria-expanded={isOpen}
-                  className="w-full flex items-center gap-4 px-5 sm:px-6 py-5 text-left"
+                  className="w-full flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-4 sm:py-5 text-left"
                 >
                   <span
-                    className="shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-full text-[14px] font-semibold leading-none tracking-normal transition-all duration-300"
+                    className="shrink-0 inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full text-[13px] sm:text-[14px] font-semibold leading-none tracking-normal transition-all duration-300"
                     style={{
                       backgroundColor: isOpen ? 'rgba(61, 100, 254, 0.10)' : 'rgba(62, 66, 89, 0.06)',
                       color: isOpen ? '#3D64FE' : 'rgba(62, 66, 89, 0.55)',
@@ -146,12 +146,12 @@ export default function FAQ() {
                     {number}
                   </span>
 
-                  <span className="flex-1 text-[16px] sm:text-[18px] lg:text-[16px] font-semibold leading-snug tracking-normal text-[#3E4259]">
+                  <span className="flex-1 text-[14px] sm:text-[16px] lg:text-[16px] font-semibold leading-snug tracking-normal text-[#3E4259]">
                     {item.q}
                   </span>
 
                   <span
-                    className="shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300"
+                    className="shrink-0 inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full transition-all duration-300"
                     style={{
                       backgroundColor: isOpen ? 'rgba(61, 100, 254, 0.10)' : 'rgba(62, 66, 89, 0.06)',
                       color: isOpen ? '#3D64FE' : 'rgba(62, 66, 89, 0.55)',
@@ -168,7 +168,7 @@ export default function FAQ() {
                     opacity: isOpen ? 1 : 0,
                   }}
                 >
-                  <div className="pl-[72px] sm:pl-[80px] pr-5 sm:pr-6 pb-6 text-[14px] sm:text-[15px] leading-relaxed tracking-normal text-[#3E4259]">
+                  <div className="pl-14 sm:pl-[72px] pr-4 sm:pr-6 pb-5 sm:pb-6 text-[14px] sm:text-[15px] leading-relaxed tracking-normal text-[#3E4259]">
                     {item.a}
                   </div>
                 </div>

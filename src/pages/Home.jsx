@@ -9,6 +9,7 @@ import FAQ from '../components/FAQ.jsx'
 import CTA from '../components/CTA.jsx'
 import Footer from '../components/Footer.jsx'
 import ChatWidget from '../components/ChatWidget.jsx'
+import ContactBanner from '../components/ContactBanner.jsx'
 
 export default function Home() {
   const ctaGlowRef = useRef(null)
@@ -40,6 +41,7 @@ export default function Home() {
             style={{ transform: 'translateZ(0)' }}
           />
           <CTA />
+          <ContactBanner />
           <Footer />
         </div>
       </main>

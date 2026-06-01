@@ -114,6 +114,7 @@ export default function Hero() {
   const transition = useCallback((nextIdx) => {
     const curIdx = photoIdxRef.current
     if (nextIdx === curIdx) return
+    preloadNext(nextIdx)
 
     const curSlide = slideRefs.current[curIdx]
     const nxtSlide = slideRefs.current[nextIdx]
@@ -133,7 +134,7 @@ export default function Hero() {
     startKB(imgRefs.current[nextIdx])
     updateHeading(nextIdx)
     photoIdxRef.current = nextIdx
-  }, [updateHeading])
+  }, [updateHeading, preloadNext])
 
   // ── Auto-advance ──────────────────────────────────────────────────────────
 
@@ -151,12 +152,16 @@ export default function Hero() {
 
   // ── Init ──────────────────────────────────────────────────────────────────
 
+  // Preload next image just before it's needed — avoids loading all 10 upfront
+  const preloadNext = useCallback((currentIdx) => {
+    const nextIdx = (currentIdx + 1) % PHOTOS.length
+    const img = new Image()
+    img.src = PHOTOS[nextIdx].src
+  }, [])
+
   useEffect(() => {
-    // Preload all images so crossfades never stutter waiting for a decode
-    PHOTOS.forEach(photo => {
-      const img = new Image()
-      img.src = photo.src
-    })
+    // Only eagerly preload the second image; the rest load on demand
+    preloadNext(0)
 
     // Photo initial state — promote each slide to its own compositor layer
     slideRefs.current.forEach((s, i) => {

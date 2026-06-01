@@ -486,11 +486,17 @@ export default function AiChat() {
           </AnimatePresence>
 
           {/* Horizontal row: support buttons grow to the left, AI FAB slides with them */}
-          <motion.div layout style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <motion.div
+            layout
+            transition={{ type:'spring', stiffness:500, damping:24, mass:0.55 }}
+            style={{ display:'flex', alignItems:'center', gap:10 }}
+          >
 
-          {/* ── AI FAB — slides left when support cluster is open ── */}
+          {/* ── AI FAB — slides left when support cluster opens, bounces back on close ── */}
           <motion.button
             layout
+            layoutId="ai-fab"
+            transition={{ type:'spring', stiffness:520, damping:22, mass:0.6 }}
             onClick={() => { setOpen(o => !o); if (supportOpen) setSupportOpen(false); }}
             whileHover={{ scale:1.07 }}
             whileTap={{ scale:0.88 }}
@@ -603,18 +609,6 @@ export default function AiChat() {
                     }}
                   >
                     {icon}
-                    {/* Tooltip */}
-                    <span style={{
-                      position:'absolute', bottom:'calc(100% + 7px)', left:'50%',
-                      transform:'translateX(-50%)',
-                      background:'rgba(10,14,26,0.90)', color:'#fff',
-                      fontSize:11, fontWeight:600, whiteSpace:'nowrap',
-                      padding:'3px 8px', borderRadius:6,
-                      backdropFilter:'blur(8px)', pointerEvents:'none',
-                      letterSpacing:'0.04em',
-                    }}>
-                      {label}
-                    </span>
                   </motion.button>
                 ))}
               </>

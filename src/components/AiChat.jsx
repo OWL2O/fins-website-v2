@@ -250,6 +250,13 @@ export default function AiChat() {
 
   const isBanned = banCountdown > 0;
 
+  // ── auto-close support cluster after 5 s ────────────────────────────────
+  useEffect(() => {
+    if (!supportOpen) return;
+    const t = setTimeout(() => setSupportOpen(false), 5000);
+    return () => clearTimeout(t);
+  }, [supportOpen]);
+
   // ── focus on open ─────────────────────────────────────────────────────────
   useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 120); }, [open]);
 

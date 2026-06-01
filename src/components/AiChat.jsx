@@ -175,15 +175,17 @@ function Cursor() {
 export default function AiChat() {
   const [open,         setOpen]         = useState(false);
   const [supportOpen,  setSupportOpen]  = useState(false);
+  const [fabReturning, setFabReturning] = useState(false); // drives the "return home" animation
   const [messages,     setMessages]     = useState([]);
   const [input,        setInput]        = useState('');
   const [busy,         setBusy]         = useState(false);
   const [bannedUntil,  setBannedUntil]  = useState(0);
   const [banCountdown, setBanCountdown] = useState(0);
 
-  const inputRef    = useRef(null);
-  const bottomRef   = useRef(null);
-  const msgAreaRef  = useRef(null);
+  const inputRef           = useRef(null);
+  const bottomRef          = useRef(null);
+  const msgAreaRef         = useRef(null);
+  const prevSupportOpenRef = useRef(false);
 
   // ── ban init ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -218,6 +220,16 @@ export default function AiChat() {
       area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
     }
   }, [messages, busy]);
+
+  // ── "Return home" animation — fires once when support cluster closes ─────────
+  useEffect(() => {
+    if (prevSupportOpenRef.current && !supportOpen) {
+      setFabReturning(true);
+      const t = setTimeout(() => setFabReturning(false), 750);
+      return () => clearTimeout(t);
+    }
+    prevSupportOpenRef.current = supportOpen;
+  }, [supportOpen]);
 
   // ── intercept wheel inside chat — prevent page scroll when scrolling chat ──
   useEffect(() => {
@@ -492,13 +504,26 @@ export default function AiChat() {
             style={{ display:'flex', alignItems:'center', gap:10 }}
           >
 
-          {/* ── AI FAB — slides left when support cluster opens, bounces back on close ── */}
+          {/* ── AI FAB — slides left when support cluster opens, cinematic return on close ── */}
           <motion.button
             layout
             transition={{ type:'spring', stiffness:220, damping:34, mass:1.1 }}
+            // Keyframe animation: squish → overshoot → oscillate → land
+            animate={fabReturning ? {
+              scale:  [1, 0.55, 1.40, 0.88, 1.12, 0.97, 1],
+              rotate: [0, -35,  20,  -10,    6,  -2,  0],
+            } : { scale: 1, rotate: 0 }}
+            // During return: fast keyframe sequence; otherwise normal layout spring
+            {...(fabReturning ? {
+              transition: {
+                duration: 0.68,
+                ease: [0.22, 1, 0.36, 1],
+                times: [0, 0.18, 0.42, 0.60, 0.76, 0.90, 1],
+              }
+            } : {})}
             onClick={() => { setOpen(o => !o); if (supportOpen) setSupportOpen(false); }}
-            whileHover={{ scale:1.07 }}
-            whileTap={{ scale:0.88 }}
+            whileHover={!fabReturning ? { scale:1.07 } : undefined}
+            whileTap={!fabReturning ? { scale:0.88 } : undefined}
             aria-label="AI ასისტენტი"
             style={{
               position:'relative', width:48, height:48, borderRadius:'50%',
@@ -518,7 +543,19 @@ export default function AiChat() {
               transition:'background 0.2s, box-shadow 0.2s',
             }}
           >
-            {!open && !isBanned && (
+            {/* Glow ring that explodes outward on landing */}
+            {fabReturning && (
+              <motion.span
+                initial={{ scale:1, opacity:0.75 }}
+                animate={{ scale:3.2, opacity:0 }}
+                transition={{ duration:0.55, ease:'easeOut', delay:0.34 }}
+                style={{ position:'absolute', inset:0, borderRadius:'50%',
+                  background:'rgba(79,107,229,0.55)', pointerEvents:'none' }}
+              />
+            )}
+
+            {/* Normal breathing ring */}
+            {!open && !isBanned && !fabReturning && (
               <motion.span
                 style={{ position:'absolute', inset:0, borderRadius:'50%', background:'rgba(79,107,229,0.28)', pointerEvents:'none' }}
                 animate={{ scale:[1,1.42,1], opacity:[0.55,0,0.55] }}

@@ -175,17 +175,15 @@ function Cursor() {
 export default function AiChat() {
   const [open,         setOpen]         = useState(false);
   const [supportOpen,  setSupportOpen]  = useState(false);
-  const [fabReturning, setFabReturning] = useState(false); // drives the "return home" animation
   const [messages,     setMessages]     = useState([]);
   const [input,        setInput]        = useState('');
   const [busy,         setBusy]         = useState(false);
   const [bannedUntil,  setBannedUntil]  = useState(0);
   const [banCountdown, setBanCountdown] = useState(0);
 
-  const inputRef           = useRef(null);
-  const bottomRef          = useRef(null);
-  const msgAreaRef         = useRef(null);
-  const prevSupportOpenRef = useRef(false);
+  const inputRef    = useRef(null);
+  const bottomRef   = useRef(null);
+  const msgAreaRef  = useRef(null);
 
   // ── ban init ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -220,16 +218,6 @@ export default function AiChat() {
       area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
     }
   }, [messages, busy]);
-
-  // ── "Return home" animation — fires once when support cluster closes ─────────
-  useEffect(() => {
-    if (prevSupportOpenRef.current && !supportOpen) {
-      setFabReturning(true);
-      const t = setTimeout(() => setFabReturning(false), 750);
-      return () => clearTimeout(t);
-    }
-    prevSupportOpenRef.current = supportOpen;
-  }, [supportOpen]);
 
   // ── intercept wheel inside chat — prevent page scroll when scrolling chat ──
   useEffect(() => {
@@ -504,95 +492,56 @@ export default function AiChat() {
             style={{ display:'flex', alignItems:'center', gap:10 }}
           >
 
-          {/*
-           * ── AI FAB — two-layer approach ──────────────────────────────────
-           * OUTER motion.div  → layout only (slides the FAB left/right in the row)
-           * INNER motion.button → animate only (runs the cinematic keyframe sequence)
-           * Keeping them separate stops layout from interrupting the keyframe animation.
-           */}
-          <motion.div
+          {/* ── AI FAB ── */}
+          <motion.button
             layout
-            transition={{ type:'spring', stiffness:220, damping:34, mass:1.1 }}
-            style={{ position:'relative', flexShrink:0 }}
+            transition={{ type:'spring', stiffness:160, damping:26, mass:1.2 }}
+            onClick={() => { setOpen(o => !o); if (supportOpen) setSupportOpen(false); }}
+            whileHover={{ scale:1.07 }}
+            whileTap={{ scale:0.90 }}
+            aria-label="AI ასისტენტი"
+            style={{
+              position:'relative', flexShrink:0,
+              width:48, height:48, borderRadius:'50%',
+              border:'none', cursor:'pointer',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              color:'#fff',
+              background: isBanned
+                ? 'linear-gradient(135deg,#ef4444,#b91c1c)'
+                : open
+                  ? 'linear-gradient(135deg,#252f52,#1a2240)'
+                  : 'linear-gradient(135deg,#5074E8,#3B5BDB)',
+              boxShadow: isBanned
+                ? '0 4px 20px rgba(239,68,68,0.40), 0 0 0 1px rgba(255,255,255,0.08)'
+                : open
+                  ? '0 4px 20px rgba(0,0,0,0.30), 0 0 0 1px rgba(255,255,255,0.07)'
+                  : '0 4px 22px rgba(59,91,219,0.45), 0 0 0 1px rgba(255,255,255,0.08)',
+              transition:'background 0.2s, box-shadow 0.2s',
+            }}
           >
-            {/* Glow burst ring — lives outside the button so overflow is unrestricted */}
-            <AnimatePresence>
-              {fabReturning && (
-                <motion.span
-                  key="glow"
-                  initial={{ scale:1, opacity:0.8 }}
-                  animate={{ scale:3.4, opacity:0 }}
-                  exit={{ opacity:0 }}
-                  transition={{ duration:0.6, ease:'easeOut', delay:0.30 }}
-                  style={{
-                    position:'absolute', inset:0, borderRadius:'50%',
-                    background:'rgba(79,107,229,0.55)', pointerEvents:'none',
-                    zIndex:0,
-                  }}
-                />
+            {!open && !isBanned && (
+              <motion.span
+                style={{ position:'absolute', inset:0, borderRadius:'50%', background:'rgba(79,107,229,0.28)', pointerEvents:'none' }}
+                animate={{ scale:[1,1.42,1], opacity:[0.55,0,0.55] }}
+                transition={{ duration:3.8, repeat:Infinity, ease:'easeInOut' }}
+              />
+            )}
+            <AnimatePresence mode="wait" initial={false}>
+              {open ? (
+                <motion.span key="x" initial={{rotate:-90,opacity:0,scale:0.6}} animate={{rotate:0,opacity:1,scale:1}} exit={{rotate:90,opacity:0,scale:0.6}} transition={{duration:0.14}} style={{display:'flex'}}>
+                  <X size={18} />
+                </motion.span>
+              ) : isBanned ? (
+                <motion.span key="ban" initial={{scale:0.6,opacity:0}} animate={{scale:1,opacity:1}} exit={{scale:0.6,opacity:0}} transition={{duration:0.14}} style={{display:'flex'}}>
+                  <Ban size={18} />
+                </motion.span>
+              ) : (
+                <motion.span key="spark" initial={{rotate:90,opacity:0,scale:0.6}} animate={{rotate:0,opacity:1,scale:1}} exit={{rotate:-90,opacity:0,scale:0.6}} transition={{duration:0.14}} style={{display:'flex'}}>
+                  <Sparkles size={18} />
+                </motion.span>
               )}
             </AnimatePresence>
-
-            {/* Button — visual effects only, NO layout prop */}
-            <motion.button
-              animate={fabReturning ? {
-                scale:  [1, 0.52, 1.42, 0.88, 1.14, 0.96, 1],
-                rotate: [0, -38,  22,  -12,    7,  -3,  0],
-              } : { scale:1, rotate:0 }}
-              transition={fabReturning ? {
-                duration: 0.70,
-                ease: [0.22, 1, 0.36, 1],
-                times: [0, 0.17, 0.42, 0.61, 0.77, 0.91, 1],
-              } : { duration:0 }}
-              onClick={() => { setOpen(o => !o); if (supportOpen) setSupportOpen(false); }}
-              whileHover={!fabReturning ? { scale:1.07 } : undefined}
-              whileTap={!fabReturning  ? { scale:0.88 } : undefined}
-              aria-label="AI ასისტენტი"
-              style={{
-                position:'relative', zIndex:1,
-                width:48, height:48, borderRadius:'50%',
-                border:'none', cursor:'pointer',
-                display:'flex', alignItems:'center', justifyContent:'center',
-                color:'#fff',
-                background: isBanned
-                  ? 'linear-gradient(135deg,#ef4444,#b91c1c)'
-                  : open
-                    ? 'linear-gradient(135deg,#252f52,#1a2240)'
-                    : 'linear-gradient(135deg,#5074E8,#3B5BDB)',
-                boxShadow: isBanned
-                  ? '0 4px 20px rgba(239,68,68,0.40), 0 0 0 1px rgba(255,255,255,0.08)'
-                  : open
-                    ? '0 4px 20px rgba(0,0,0,0.30), 0 0 0 1px rgba(255,255,255,0.07)'
-                    : '0 4px 22px rgba(59,91,219,0.45), 0 0 0 1px rgba(255,255,255,0.08)',
-                transition:'background 0.2s, box-shadow 0.2s',
-              }}
-            >
-              {/* Idle breathing ring */}
-              {!open && !isBanned && !fabReturning && (
-                <motion.span
-                  style={{ position:'absolute', inset:0, borderRadius:'50%', background:'rgba(79,107,229,0.28)', pointerEvents:'none' }}
-                  animate={{ scale:[1,1.42,1], opacity:[0.55,0,0.55] }}
-                  transition={{ duration:3.8, repeat:Infinity, ease:'easeInOut' }}
-                />
-              )}
-
-              <AnimatePresence mode="wait" initial={false}>
-                {open ? (
-                  <motion.span key="x" initial={{rotate:-90,opacity:0,scale:0.6}} animate={{rotate:0,opacity:1,scale:1}} exit={{rotate:90,opacity:0,scale:0.6}} transition={{duration:0.14}} style={{display:'flex'}}>
-                    <X size={18} />
-                  </motion.span>
-                ) : isBanned ? (
-                  <motion.span key="ban" initial={{scale:0.6,opacity:0}} animate={{scale:1,opacity:1}} exit={{scale:0.6,opacity:0}} transition={{duration:0.14}} style={{display:'flex'}}>
-                    <Ban size={18} />
-                  </motion.span>
-                ) : (
-                  <motion.span key="spark" initial={{rotate:90,opacity:0,scale:0.6}} animate={{rotate:0,opacity:1,scale:1}} exit={{rotate:-90,opacity:0,scale:0.6}} transition={{duration:0.14}} style={{display:'flex'}}>
-                    <Sparkles size={18} />
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </motion.button>
-          </motion.div>
+          </motion.button>
 
           {/* ── Support cluster — AnyDesk, Facebook, WhatsApp ── */}
           <AnimatePresence>

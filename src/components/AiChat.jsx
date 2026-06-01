@@ -172,6 +172,50 @@ function Cursor() {
 }
 
 // ── main ──────────────────────────────────────────────────────────────────────
+// ── FAB shared helpers ────────────────────────────────────────────────────────
+
+function fabStyle(isBanned, open) {
+  return {
+    position:'relative', flexShrink:0,
+    width:48, height:48, borderRadius:'50%',
+    border:'none', cursor:'pointer',
+    display:'flex', alignItems:'center', justifyContent:'center',
+    color:'#fff',
+    background: isBanned
+      ? 'linear-gradient(135deg,#ef4444,#b91c1c)'
+      : open
+        ? 'linear-gradient(135deg,#252f52,#1a2240)'
+        : 'linear-gradient(135deg,#5074E8,#3B5BDB)',
+    boxShadow: isBanned
+      ? '0 4px 20px rgba(239,68,68,0.40), 0 0 0 1px rgba(255,255,255,0.08)'
+      : open
+        ? '0 4px 20px rgba(0,0,0,0.30), 0 0 0 1px rgba(255,255,255,0.07)'
+        : '0 4px 22px rgba(59,91,219,0.45), 0 0 0 1px rgba(255,255,255,0.08)',
+    transition:'background 0.2s, box-shadow 0.2s',
+  };
+}
+
+// Icon inside the FAB — X when chat open, Ban when banned, Sparkles otherwise
+function FabInner({ open, isBanned }) {
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      {open ? (
+        <motion.span key="x" initial={{rotate:-90,opacity:0,scale:0.6}} animate={{rotate:0,opacity:1,scale:1}} exit={{rotate:90,opacity:0,scale:0.6}} transition={{duration:0.14}} style={{display:'flex'}}>
+          <X size={18} />
+        </motion.span>
+      ) : isBanned ? (
+        <motion.span key="ban" initial={{scale:0.6,opacity:0}} animate={{scale:1,opacity:1}} exit={{scale:0.6,opacity:0}} transition={{duration:0.14}} style={{display:'flex'}}>
+          <Ban size={18} />
+        </motion.span>
+      ) : (
+        <motion.span key="spark" initial={{rotate:90,opacity:0,scale:0.6}} animate={{rotate:0,opacity:1,scale:1}} exit={{rotate:-90,opacity:0,scale:0.6}} transition={{duration:0.14}} style={{display:'flex'}}>
+          <Sparkles size={18} />
+        </motion.span>
+      )}
+    </AnimatePresence>
+  );
+}
+
 export default function AiChat() {
   const [open,         setOpen]         = useState(false);
   const [supportOpen,  setSupportOpen]  = useState(false);
@@ -492,56 +536,57 @@ export default function AiChat() {
             style={{ display:'flex', alignItems:'center', gap:10 }}
           >
 
-          {/* ── AI FAB ── */}
-          <motion.button
-            layout
-            transition={{ type:'spring', stiffness:160, damping:26, mass:1.2 }}
-            onClick={() => { setOpen(o => !o); if (supportOpen) setSupportOpen(false); }}
-            whileHover={{ scale:1.07 }}
-            whileTap={{ scale:0.90 }}
-            aria-label="AI ასისტენტი"
-            style={{
-              position:'relative', flexShrink:0,
-              width:48, height:48, borderRadius:'50%',
-              border:'none', cursor:'pointer',
-              display:'flex', alignItems:'center', justifyContent:'center',
-              color:'#fff',
-              background: isBanned
-                ? 'linear-gradient(135deg,#ef4444,#b91c1c)'
-                : open
-                  ? 'linear-gradient(135deg,#252f52,#1a2240)'
-                  : 'linear-gradient(135deg,#5074E8,#3B5BDB)',
-              boxShadow: isBanned
-                ? '0 4px 20px rgba(239,68,68,0.40), 0 0 0 1px rgba(255,255,255,0.08)'
-                : open
-                  ? '0 4px 20px rgba(0,0,0,0.30), 0 0 0 1px rgba(255,255,255,0.07)'
-                  : '0 4px 22px rgba(59,91,219,0.45), 0 0 0 1px rgba(255,255,255,0.08)',
-              transition:'background 0.2s, box-shadow 0.2s',
-            }}
-          >
-            {!open && !isBanned && (
-              <motion.span
-                style={{ position:'absolute', inset:0, borderRadius:'50%', background:'rgba(79,107,229,0.28)', pointerEvents:'none' }}
-                animate={{ scale:[1,1.42,1], opacity:[0.55,0,0.55] }}
-                transition={{ duration:3.8, repeat:Infinity, ease:'easeInOut' }}
-              />
+          {/*
+           * ── AI FAB ──────────────────────────────────────────────────────
+           * Two keyed variants inside AnimatePresence(popLayout):
+           *   "in-cluster"  → renders while support is open; plays a compress+
+           *                   disappear exit when support closes
+           *   "at-home"     → renders at the home position; pops in with a
+           *                   spring bounce after the exit completes
+           * popLayout removes the exiting element from flow instantly so the
+           * entering one snaps straight to its home position before animating.
+           */}
+          <AnimatePresence mode="popLayout">
+            {supportOpen ? (
+              <motion.button
+                key="in-cluster"
+                exit={{
+                  scaleX: [1, 1.35, 0],
+                  scaleY: [1, 0.55, 0],
+                  opacity: [1, 1,   0],
+                  transition: { duration:0.30, times:[0, 0.38, 1], ease:'easeIn' },
+                }}
+                onClick={() => { setOpen(o => !o); if (supportOpen) setSupportOpen(false); }}
+                whileHover={{ scale:1.07 }}
+                whileTap={{ scale:0.90 }}
+                aria-label="AI ასისტენტი"
+                style={fabStyle(isBanned, open)}
+              >
+                <FabInner open={open} isBanned={isBanned} />
+              </motion.button>
+            ) : (
+              <motion.button
+                key="at-home"
+                initial={{ scale:0, opacity:0 }}
+                animate={{ scale:1, opacity:1 }}
+                transition={{ type:'spring', stiffness:420, damping:18, mass:0.65 }}
+                onClick={() => { setOpen(o => !o); }}
+                whileHover={{ scale:1.07 }}
+                whileTap={{ scale:0.90 }}
+                aria-label="AI ასისტენტი"
+                style={fabStyle(isBanned, open)}
+              >
+                {!open && !isBanned && (
+                  <motion.span
+                    style={{ position:'absolute', inset:0, borderRadius:'50%', background:'rgba(79,107,229,0.28)', pointerEvents:'none' }}
+                    animate={{ scale:[1,1.42,1], opacity:[0.55,0,0.55] }}
+                    transition={{ duration:3.8, repeat:Infinity, ease:'easeInOut' }}
+                  />
+                )}
+                <FabInner open={open} isBanned={isBanned} />
+              </motion.button>
             )}
-            <AnimatePresence mode="wait" initial={false}>
-              {open ? (
-                <motion.span key="x" initial={{rotate:-90,opacity:0,scale:0.6}} animate={{rotate:0,opacity:1,scale:1}} exit={{rotate:90,opacity:0,scale:0.6}} transition={{duration:0.14}} style={{display:'flex'}}>
-                  <X size={18} />
-                </motion.span>
-              ) : isBanned ? (
-                <motion.span key="ban" initial={{scale:0.6,opacity:0}} animate={{scale:1,opacity:1}} exit={{scale:0.6,opacity:0}} transition={{duration:0.14}} style={{display:'flex'}}>
-                  <Ban size={18} />
-                </motion.span>
-              ) : (
-                <motion.span key="spark" initial={{rotate:90,opacity:0,scale:0.6}} animate={{rotate:0,opacity:1,scale:1}} exit={{rotate:-90,opacity:0,scale:0.6}} transition={{duration:0.14}} style={{display:'flex'}}>
-                  <Sparkles size={18} />
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </motion.button>
+          </AnimatePresence>
 
           {/* ── Support cluster — AnyDesk, Facebook, WhatsApp ── */}
           <AnimatePresence>

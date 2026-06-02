@@ -10,7 +10,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUp, Trash2, X, Sparkles, Ban, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
 
@@ -115,13 +115,13 @@ function renderText(text, onNavigate) {
     const section = resolveSection(url);
 
     if (section) {
-      // Any path that resolves to an on-home section (incl. /prices, /#pricing…)
+      // On-home section (incl. /prices, /#pricing…) — smooth-scroll, no reload.
       nodes.push(<SectionLink key={key++} section={section} onNavigate={onNavigate}>{lbl}</SectionLink>);
-    } else if (url.startsWith('/')) {
-      // Real standalone page — React Router Link (no reload)
-      nodes.push(<Link key={key++} to={url} onClick={onNavigate} className={cls}>{lbl}</Link>);
     } else {
-      // External URL — new tab
+      // Real standalone page (/offer, /contact, …) OR an external URL — always
+      // open in a NEW TAB so the chat (and its whole history) is never lost when
+      // the user follows a link. The chat lives only on the home route, so a
+      // same-tab navigation would otherwise unmount it and wipe the conversation.
       nodes.push(<a key={key++} href={url} target="_blank" rel="noopener noreferrer" className={cls}>{lbl}</a>);
     }
     last = m.index + m[0].length;

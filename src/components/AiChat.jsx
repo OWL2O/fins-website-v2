@@ -224,10 +224,30 @@ export default function AiChat() {
   const [busy,         setBusy]         = useState(false);
   const [bannedUntil,  setBannedUntil]  = useState(0);
   const [banCountdown, setBanCountdown] = useState(0);
+  const [navOpen,      setNavOpen]      = useState(false);
+  const [isMobile,     setIsMobile]     = useState(() => window.innerWidth < 1024);
 
   const inputRef    = useRef(null);
   const bottomRef   = useRef(null);
   const msgAreaRef  = useRef(null);
+
+  // ── hide widget when mobile nav is open ──────────────────────────────────
+  useEffect(() => {
+    const handler = (e) => {
+      setNavOpen(e.detail.open);
+      if (e.detail.open) setSupportOpen(false);
+    };
+    window.addEventListener('navmenu', handler);
+    return () => window.removeEventListener('navmenu', handler);
+  }, []);
+
+  // ── track mobile breakpoint ───────────────────────────────────────────────
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1023px)');
+    const handler = (e) => { setIsMobile(e.matches); if (e.matches) setSupportOpen(false); };
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   // ── ban init ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -345,6 +365,8 @@ export default function AiChat() {
   const hasText = !!input.trim();
 
   // ── render ────────────────────────────────────────────────────────────────
+  if (navOpen) return null;
+
   return (
     <>
       {/* ═══════════════════════════════════════════════════════════════════
@@ -595,9 +617,9 @@ export default function AiChat() {
             )}
           </AnimatePresence>
 
-          {/* ── Support cluster — AnyDesk, Facebook, WhatsApp ── */}
+          {/* ── Support cluster — AnyDesk, Facebook, WhatsApp (desktop only) ── */}
           <AnimatePresence>
-            {supportOpen && (
+            {!isMobile && supportOpen && (
               <>
                 {[
                   {
@@ -667,8 +689,8 @@ export default function AiChat() {
             )}
           </AnimatePresence>
 
-          {/* ── Support toggle [<] / [>] ── */}
-          <motion.button
+          {/* ── Support toggle [<] / [>] — desktop only ── */}
+          {!isMobile && <motion.button
             layout
             onClick={() => setSupportOpen(o => !o)}
             whileHover={{ scale:1.08 }}
@@ -692,7 +714,7 @@ export default function AiChat() {
             >
               <ChevronLeft size={16} strokeWidth={2.5} />
             </motion.span>
-          </motion.button>
+          </motion.button>}
 
           </motion.div> {/* end horizontal cluster row */}
 

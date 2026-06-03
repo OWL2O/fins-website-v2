@@ -12,7 +12,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUp, Trash2, X, Sparkles, Ban, ChevronLeft, ChevronRight, MessageCircle, Check } from 'lucide-react';
+import { ArrowUp, Trash2, X, Sparkles, Ban, Check } from 'lucide-react';
 
 // ── colours ───────────────────────────────────────────────────────────────────
 const AI_BG   = '#1D2748';                           // AI bubble
@@ -189,7 +189,7 @@ const INPUT_STYLE = {
   fontFamily: 'inherit',
 };
 
-function ContactFormBubble({ submitted, name, phone, onNameChange, onPhoneChange, onSubmit, sending }) {
+function ContactFormBubble({ submitted, name, phone, email, onNameChange, onPhoneChange, onEmailChange, onSubmit, sending }) {
   function handleKey(e) { if (e.key === 'Enter') onSubmit(); }
 
   return (
@@ -237,6 +237,15 @@ function ContactFormBubble({ submitted, name, phone, onNameChange, onPhoneChange
                 placeholder="ნომერი *"
                 value={phone}
                 onChange={e => onPhoneChange(e.target.value)}
+                onKeyDown={handleKey}
+                style={INPUT_STYLE}
+              />
+              <input
+                className="fins-chat-input"
+                type="email"
+                placeholder="მეილი"
+                value={email}
+                onChange={e => onEmailChange(e.target.value)}
                 onKeyDown={handleKey}
                 style={INPUT_STYLE}
               />
@@ -316,15 +325,13 @@ function FabInner({ open, isBanned }) {
 
 export default function AiChat() {
   const [open,         setOpen]         = useState(false);
-  const [supportOpen,  setSupportOpen]  = useState(false);
   const [messages,     setMessages]     = useState([]);
   const [input,        setInput]        = useState('');
   const [busy,         setBusy]         = useState(false);
   const [bannedUntil,  setBannedUntil]  = useState(0);
   const [banCountdown, setBanCountdown] = useState(0);
   const [navOpen,      setNavOpen]      = useState(false);
-  const [isMobile,     setIsMobile]     = useState(() => window.innerWidth < 1024);
-  const [formValues,   setFormValues]   = useState({ name:'', phone:'' });
+  const [formValues,   setFormValues]   = useState({ name:'', phone:'', email:'' });
   const [formSending,  setFormSending]  = useState(false);
 
   const inputRef    = useRef(null);
@@ -333,20 +340,9 @@ export default function AiChat() {
 
   // ── hide widget when mobile nav is open ──────────────────────────────────
   useEffect(() => {
-    const handler = (e) => {
-      setNavOpen(e.detail.open);
-      if (e.detail.open) setSupportOpen(false);
-    };
+    const handler = (e) => setNavOpen(e.detail.open);
     window.addEventListener('navmenu', handler);
     return () => window.removeEventListener('navmenu', handler);
-  }, []);
-
-  // ── track mobile breakpoint ───────────────────────────────────────────────
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 1023px)');
-    const handler = (e) => { setIsMobile(e.matches); if (e.matches) setSupportOpen(false); };
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
   }, []);
 
   // ── ban init ──────────────────────────────────────────────────────────────
@@ -370,12 +366,6 @@ export default function AiChat() {
 
   const isBanned = banCountdown > 0;
 
-  // ── auto-close support cluster after 5 s ────────────────────────────────
-  useEffect(() => {
-    if (!supportOpen) return;
-    const t = setTimeout(() => setSupportOpen(false), 5000);
-    return () => clearTimeout(t);
-  }, [supportOpen]);
 
   // ── focus on open ─────────────────────────────────────────────────────────
   useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 120); }, [open]);
@@ -390,24 +380,35 @@ export default function AiChat() {
     }
   }, [messages, busy]);
 
-  // ── intercept wheel inside chat — prevent page scroll when scrolling chat ──
+  // ── smooth wheel scroll — RAF lerp toward accumulated target ────────────────
   useEffect(() => {
     const el = msgAreaRef.current;
     if (!el || !open) return;
-    const onWheel = (e) => {
-      const { scrollTop, scrollHeight, clientHeight } = el;
-      const atTop    = scrollTop === 0;
-      const atBottom = scrollTop >= scrollHeight - clientHeight - 1;
-      // only stop propagation when the container actually has room to scroll
-      if ((!atTop && e.deltaY < 0) || (!atBottom && e.deltaY > 0)) {
-        e.preventDefault();
-        e.stopPropagation();
-        el.scrollTop += e.deltaY;
-      }
+
+    let target = el.scrollTop;
+    let rafId  = null;
+
+    const tick = () => {
+      const diff = target - el.scrollTop;
+      if (Math.abs(diff) < 0.5) { el.scrollTop = target; rafId = null; return; }
+      el.scrollTop += diff * 0.13;
+      rafId = requestAnimationFrame(tick);
     };
+
+    const onWheel = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const max = el.scrollHeight - el.clientHeight;
+      target = Math.max(0, Math.min(max, target + e.deltaY));
+      if (!rafId) rafId = requestAnimationFrame(tick);
+    };
+
     el.addEventListener('wheel', onWheel, { passive: false });
-    return () => el.removeEventListener('wheel', onWheel);
-  }, [open, messages]); // re-attach when messages change (content height changes)
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, [open, messages]);
 
   // ── contact form submit ───────────────────────────────────────────────────
   async function handleFormSubmit(msgIdx) {
@@ -415,10 +416,12 @@ export default function AiChat() {
     setFormSending(true);
     const name    = formValues.name.trim() || '—';
     const phone   = formValues.phone.trim();
+    const email   = formValues.email.trim();
     const summary = messages[msgIdx]?.summary || '';
     const msgBody = [
       `სახელი / კომპანია: ${name}`,
       `ნომერი: ${phone}`,
+      email ? `მეილი: ${email}` : '',
       summary ? `\nშეჯამება:\n${summary}` : '',
     ].filter(Boolean).join('\n');
 
@@ -432,7 +435,8 @@ export default function AiChat() {
         from_name:  'FINS AI Chat',
         name,
         phone,
-        message:    msgBody,
+        email:   email || undefined,
+        message: msgBody,
       }),
     }).catch(() => {});
 
@@ -440,11 +444,11 @@ export default function AiChat() {
     fetch('/api/send-contact', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, phone, summary }),
+      body: JSON.stringify({ name, phone, email: email || undefined, summary }),
     }).catch(() => {});
 
     setMessages(prev => prev.map((m, i) => i === msgIdx ? { ...m, submitted:true } : m));
-    setFormValues({ name:'', phone:'' });
+    setFormValues({ name:'', phone:'', email:'' });
     setFormSending(false);
   }
 
@@ -516,6 +520,14 @@ export default function AiChat() {
 
   return (
     <>
+      {/* backdrop — closes chat when clicking outside */}
+      {open && (
+        <div
+          onClick={() => setOpen(false)}
+          style={{ position:'fixed', inset:0, zIndex:9998 }}
+        />
+      )}
+
       {/* ═══════════════════════════════════════════════════════════════════
           FLOATING BUBBLES — no wrapper background, just the bubbles themselves
       ═══════════════════════════════════════════════════════════════════ */}
@@ -537,15 +549,15 @@ export default function AiChat() {
               scrollbarWidth:'none',
               msOverflowStyle:'none',
               display:'flex', flexDirection:'column',
-              justifyContent:'flex-end',   // newest message always at the bottom
+              justifyContent:'flex-start',
               gap:'8px',
-              // fade starts at 0% (very top of container = upper screen) and
-              // is fully opaque by 48% — so messages dissolve above the midpoint
-              maskImage:'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.5) 28%, black 48%)',
-              WebkitMaskImage:'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.5) 28%, black 48%)',
+              padding:'8px 0',
+              WebkitOverflowScrolling:'touch',
               pointerEvents:'auto',
             }}
           >
+            {/* spacer pushes messages to the bottom; scroll still works upward */}
+            <div style={{ flex: '1 1 auto' }} />
             {messages.map((msg, i) => (
               msg.role === 'form' ? (
                 <ContactFormBubble
@@ -553,8 +565,10 @@ export default function AiChat() {
                   submitted={msg.submitted}
                   name={formValues.name}
                   phone={formValues.phone}
+                  email={formValues.email}
                   onNameChange={v => setFormValues(p => ({ ...p, name:v }))}
                   onPhoneChange={v => setFormValues(p => ({ ...p, phone:v }))}
+                  onEmailChange={v => setFormValues(p => ({ ...p, email:v }))}
                   onSubmit={() => handleFormSubmit(i)}
                   sending={formSending}
                 />
@@ -613,10 +627,7 @@ export default function AiChat() {
         right:'24px',
         bottom:'max(24px, env(safe-area-inset-bottom))',
       }}>
-        {/* flex-col: input bar stacked above the horizontal button row */}
         <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:'10px' }}>
-        {/* horizontal row: support buttons + AI FAB + toggle — all share layout animation */}
-        {/* this inner div is the actual horizontal cluster */}
 
           {/* ── Input pill ── */}
           <AnimatePresence>
@@ -652,6 +663,7 @@ export default function AiChat() {
                     <input
                       ref={inputRef}
                       type="text"
+                      autoComplete="off"
                       value={input}
                       onChange={e => setInput(e.target.value)}
                       onKeyDown={handleKey}
@@ -718,168 +730,29 @@ export default function AiChat() {
             )}
           </AnimatePresence>
 
-          {/* Horizontal row: support buttons grow to the left, AI FAB slides with them */}
-          <motion.div
-            layout
-            transition={{ type:'spring', stiffness:220, damping:34, mass:1.1 }}
-            style={{ display:'flex', alignItems:'center', gap:10 }}
+          {/* ── AI FAB ── */}
+          <motion.button
+            initial={{ scale:0, opacity:0 }}
+            animate={{ scale:1, opacity:1 }}
+            whileHover={{ scale:1.07 }}
+            whileTap={{ scale:0.90 }}
+            onClick={() => { setOpen(o => !o); }}
+            aria-label="AI ასისტენტი"
+            style={fabStyle(isBanned, open)}
           >
-
-          {/*
-           * ── AI FAB ──────────────────────────────────────────────────────
-           * Two keyed variants inside AnimatePresence(popLayout):
-           *   "in-cluster"  → renders while support is open; plays a compress+
-           *                   disappear exit when support closes
-           *   "at-home"     → renders at the home position; pops in with a
-           *                   spring bounce after the exit completes
-           * popLayout removes the exiting element from flow instantly so the
-           * entering one snaps straight to its home position before animating.
-           */}
-          <AnimatePresence mode="popLayout">
-            {supportOpen ? (
-              <motion.button
-                key="in-cluster"
-                exit={{
-                  scaleX: [1, 1.35, 0],
-                  scaleY: [1, 0.55, 0],
-                  opacity: [1, 1,   0],
-                  transition: { duration:0.30, times:[0, 0.38, 1], ease:'easeIn' },
-                }}
-                onClick={() => { setOpen(o => !o); if (supportOpen) setSupportOpen(false); }}
-                whileHover={{ scale:1.07 }}
-                whileTap={{ scale:0.90 }}
-                aria-label="AI ასისტენტი"
-                style={fabStyle(isBanned, open)}
-              >
-                <FabInner open={open} isBanned={isBanned} />
-              </motion.button>
-            ) : (
-              <motion.button
-                key="at-home"
-                initial={{ scale:0, opacity:0 }}
-                animate={{ scale:1, opacity:1 }}
-                transition={{ type:'spring', stiffness:420, damping:18, mass:0.65 }}
-                onClick={() => { setOpen(o => !o); }}
-                whileHover={{ scale:1.07 }}
-                whileTap={{ scale:0.90 }}
-                aria-label="AI ასისტენტი"
-                style={fabStyle(isBanned, open)}
-              >
-                {!open && !isBanned && (
-                  <motion.span
-                    style={{ position:'absolute', inset:0, borderRadius:'50%', background:'rgba(79,107,229,0.28)', pointerEvents:'none' }}
-                    animate={{ scale:[1,1.42,1], opacity:[0.55,0,0.55] }}
-                    transition={{ duration:3.8, repeat:Infinity, ease:'easeInOut' }}
-                  />
-                )}
-                <FabInner open={open} isBanned={isBanned} />
-              </motion.button>
+            {!open && !isBanned && (
+              <motion.span
+                style={{ position:'absolute', inset:0, borderRadius:'50%', background:'rgba(79,107,229,0.28)', pointerEvents:'none' }}
+                animate={{ scale:[1,1.42,1], opacity:[0.55,0,0.55] }}
+                transition={{ duration:3.8, repeat:Infinity, ease:'easeInOut' }}
+              />
             )}
-          </AnimatePresence>
-
-          {/* ── Support cluster — AnyDesk, Facebook, WhatsApp (desktop only) ── */}
-          <AnimatePresence>
-            {!isMobile && supportOpen && (
-              <>
-                {[
-                  {
-                    key: 'anydesk',
-                    label: 'AnyDesk',
-                    delay: 0.08,
-                    bg: '#E8613C',
-                    shadow: 'rgba(232,97,60,0.45)',
-                    action: () => window.open('https://anydesk.com/en/downloads/windows', '_blank'),
-                    icon: (
-                      // AnyDesk stacked-layers icon
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-                      </svg>
-                    ),
-                  },
-                  {
-                    key: 'facebook',
-                    label: 'Facebook',
-                    delay: 0.04,
-                    bg: '#1877F2',
-                    shadow: 'rgba(24,119,242,0.45)',
-                    action: () => window.open('https://www.facebook.com/fins.ge', '_blank'),
-                    icon: (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                      </svg>
-                    ),
-                  },
-                  {
-                    key: 'whatsapp',
-                    label: 'WhatsApp',
-                    delay: 0,
-                    bg: '#25D366',
-                    shadow: 'rgba(37,211,102,0.45)',
-                    action: () => window.open('https://wa.me/995500114090', '_blank'),
-                    icon: (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                      </svg>
-                    ),
-                  },
-                ].map(({ key, label, delay, bg, shadow, action, icon }) => (
-                  <motion.button
-                    key={key}
-                    layout
-                    onClick={action}
-                    title={label}
-                    initial={{ opacity:0, scale:0.5, x:20 }}
-                    animate={{ opacity:1, scale:1,   x:0   }}
-                    exit={{    opacity:0, scale:0.5, x:20  }}
-                    transition={{ type:'spring', stiffness:480, damping:28, delay }}
-                    whileHover={{ scale:1.12 }}
-                    whileTap={{ scale:0.88 }}
-                    style={{
-                      position:'relative', width:44, height:44, borderRadius:'50%',
-                      border:'none', cursor:'pointer',
-                      display:'flex', alignItems:'center', justifyContent:'center',
-                      background: bg,
-                      boxShadow: `0 4px 18px ${shadow}, 0 0 0 1px rgba(255,255,255,0.10)`,
-                    }}
-                  >
-                    {icon}
-                  </motion.button>
-                ))}
-              </>
-            )}
-          </AnimatePresence>
-
-          {/* ── Support toggle [<] / [>] — desktop only ── */}
-          {!isMobile && <motion.button
-            layout
-            onClick={() => setSupportOpen(o => !o)}
-            whileHover={{ scale:1.08 }}
-            whileTap={{ scale:0.88 }}
-            aria-label="Support"
-            style={{
-              width:36, height:36, borderRadius:'50%',
-              border:'1px solid rgba(255,255,255,0.14)',
-              cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
-              color:'rgba(255,255,255,0.70)',
-              background: supportOpen ? 'rgba(255,255,255,0.12)' : 'rgba(10,14,26,0.60)',
-              backdropFilter:'blur(12px)', WebkitBackdropFilter:'blur(12px)',
-              boxShadow:'0 2px 10px rgba(0,0,0,0.25)',
-              transition:'background 0.2s',
-            }}
-          >
-            <motion.span
-              animate={{ rotate: supportOpen ? 180 : 0 }}
-              transition={{ type:'spring', stiffness:400, damping:28 }}
-              style={{ display:'flex' }}
-            >
-              <ChevronLeft size={16} strokeWidth={2.5} />
-            </motion.span>
-          </motion.button>}
-
-          </motion.div> {/* end horizontal cluster row */}
+            <FabInner open={open} isBanned={isBanned} />
+          </motion.button>
 
         </div>
       </div>
+
     </>
   );
 }

@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { Plus, X, Send, CheckCircle, Loader, AlertCircle } from 'lucide-react'
+import { Plus, X, Send, CheckCircle, Loader, AlertCircle, ChevronDown, MessageSquarePlus } from 'lucide-react'
 
 const WEB3FORMS_KEY = '17019cc7-632a-49f7-9a00-60c011b65520'
 
@@ -48,8 +49,9 @@ const QUESTIONS = [
 
 // ── Mini contact form embedded in FAQ left column ────────────────────────────
 function FaqContactForm() {
-  const [form, setForm]     = useState({ name: '', phone: '', question: '' })
-  const [status, setStatus] = useState('idle') // idle | loading | success | error
+  const [open,      setOpen]    = useState(false)
+  const [form,      setForm]    = useState({ name: '', phone: '', email: '', question: '' })
+  const [status,    setStatus]  = useState('idle')
   const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }))
 
   async function handleSubmit(e) {
@@ -66,12 +68,15 @@ function FaqContactForm() {
           from_name: 'FINS FAQ Form',
           name: form.name,
           phone: form.phone,
+          email: form.email.trim() || undefined,
           message: form.question,
         }),
       })
       const data = await res.json()
       setStatus(data.success ? 'success' : 'error')
-      if (data.success) setForm({ name: '', phone: '', question: '' })
+      if (data.success) {
+        setForm({ name: '', phone: '', email: '', question: '' })
+      }
     } catch {
       setStatus('error')
     }
@@ -79,73 +84,108 @@ function FaqContactForm() {
 
   const inputCls = 'w-full rounded-xl border border-[#3E4259]/[0.14] bg-white px-4 py-2.5 text-[14px] font-medium text-[#3E4259] placeholder-[#3E4259]/30 outline-none transition-colors duration-150 focus:border-brand-500/60 focus:ring-2 focus:ring-brand-500/[0.08]'
 
-  if (status === 'success') {
-    return (
-      <div className="mt-8 flex flex-col items-start gap-3 p-5 rounded-2xl border border-emerald-500/30 bg-emerald-50">
-        <CheckCircle size={22} className="text-emerald-500" />
-        <div>
-          <p className="text-[14px] font-bold text-[#3E4259]">გაგზავნილია!</p>
-          <p className="text-[13px] font-medium text-[#3E4259]/60 mt-0.5">ჩვენი გუნდი მალე დაგიკავშირდება.</p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setStatus('idle')}
-          className="text-[12px] font-semibold text-brand-600 hover:text-brand-500 transition-colors"
-        >
-          ახალი შეკითხვა →
-        </button>
-      </div>
-    )
-  }
-
   return (
-    <form onSubmit={handleSubmit} noValidate className="mt-8 flex flex-col gap-3">
-      <p className="text-[13px] font-bold uppercase tracking-widest text-brand-600 mb-1">
-        შეკითხვის გაგზავნა
-      </p>
-      <input
-        placeholder="სახელი და გვარი *"
-        value={form.name}
-        onChange={set('name')}
-        required
-        className={inputCls}
-      />
-      <input
-        type="tel"
-        placeholder="ტელეფონი *"
-        value={form.phone}
-        onChange={set('phone')}
-        required
-        className={inputCls}
-      />
-      <textarea
-        placeholder="თქვენი შეკითხვა *"
-        value={form.question}
-        onChange={set('question')}
-        required
-        rows={3}
-        className={inputCls + ' resize-none'}
-      />
-
-      {status === 'error' && (
-        <div className="flex items-center gap-2 text-[12px] font-medium text-red-500">
-          <AlertCircle size={13} />
-          გაგზავნა ვერ მოხერხდა. სცადეთ ხელახლა.
-        </div>
-      )}
-
+    <div className="mt-8">
+      {/* trigger button */}
       <button
-        type="submit"
-        disabled={status === 'loading'}
-        className="inline-flex items-center gap-2 self-start px-5 py-2.5 rounded-full bg-brand-600 hover:bg-brand-500 disabled:opacity-60 text-white text-[13px] font-bold tracking-normal transition-colors duration-200"
+        type="button"
+        onClick={() => { setOpen(o => !o); setStatus('idle'); }}
+        className="inline-flex items-center gap-2.5 px-5 py-3 rounded-2xl border border-brand-500/30 bg-brand-50 hover:bg-brand-100 text-brand-600 text-[14px] font-semibold transition-colors duration-200 select-none"
       >
-        {status === 'loading' ? (
-          <><Loader size={13} className="animate-spin" /> იგზავნება...</>
-        ) : (
-          <><Send size={13} /> გაგზავნა</>
-        )}
+        <MessageSquarePlus size={16} />
+        მსურს კითხვის გაგზავნა
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.25, ease: 'easeInOut' }}
+          style={{ display: 'flex' }}
+        >
+          <ChevronDown size={15} />
+        </motion.span>
       </button>
-    </form>
+
+      {/* collapsible form */}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="faq-form"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div className="pt-4">
+              {status === 'success' ? (
+                <div className="flex flex-col items-start gap-3 p-5 rounded-2xl border border-emerald-500/30 bg-emerald-50">
+                  <CheckCircle size={22} className="text-emerald-500" />
+                  <div>
+                    <p className="text-[14px] font-bold text-[#3E4259]">გაგზავნილია!</p>
+                    <p className="text-[13px] font-medium text-[#3E4259]/60 mt-0.5">ჩვენი გუნდი მალე დაგიკავშირდება.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setStatus('idle')}
+                    className="text-[12px] font-semibold text-brand-600 hover:text-brand-500 transition-colors"
+                  >
+                    ახალი შეკითხვა →
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
+                  <input
+                    placeholder="სახელი და გვარი *"
+                    value={form.name}
+                    onChange={set('name')}
+                    required
+                    className={inputCls}
+                  />
+                  <input
+                    type="tel"
+                    placeholder="ტელეფონი *"
+                    value={form.phone}
+                    onChange={set('phone')}
+                    required
+                    className={inputCls}
+                  />
+                  <input
+                    type="email"
+                    placeholder="მეილი"
+                    value={form.email}
+                    onChange={set('email')}
+                    className={inputCls}
+                  />
+                  <textarea
+                    placeholder="თქვენი შეკითხვა *"
+                    value={form.question}
+                    onChange={set('question')}
+                    required
+                    rows={3}
+                    className={inputCls + ' resize-none'}
+                  />
+                  {status === 'error' && (
+                    <div className="flex items-center gap-2 text-[12px] font-medium text-red-500">
+                      <AlertCircle size={13} />
+                      გაგზავნა ვერ მოხერხდა. სცადეთ ხელახლა.
+                    </div>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={status === 'loading'}
+                    className="inline-flex items-center gap-2 self-start px-5 py-2.5 rounded-full bg-brand-600 hover:bg-brand-500 disabled:opacity-60 text-white text-[13px] font-bold tracking-normal transition-colors duration-200"
+                  >
+                    {status === 'loading' ? (
+                      <><Loader size={13} className="animate-spin" /> იგზავნება...</>
+                    ) : (
+                      <><Send size={13} /> გაგზავნა</>
+                    )}
+                  </button>
+                </form>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
 

@@ -12,7 +12,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUp, Trash2, X, Sparkles, Ban, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
+import { ArrowUp, Trash2, X, Sparkles, Ban, ChevronLeft, ChevronRight, MessageCircle, Check } from 'lucide-react';
 
 // ── colours ───────────────────────────────────────────────────────────────────
 const AI_BG   = '#1D2748';                           // AI bubble
@@ -28,7 +28,11 @@ function saveBanData(d) { localStorage.setItem(BAN_KEY, JSON.stringify(d)); }
 
 // ── text helpers ──────────────────────────────────────────────────────────────
 function stripSignals(t) {
-  return t.replace(/\[\[ADMIN_(NOTIFY|ALERT):[\s\S]*$/, '').replace(/\s*\[\[MOD:(warn|ban)\]\]/g, '').trim();
+  return t
+    .replace(/\[\[ADMIN_(NOTIFY|ALERT):[\s\S]*$/, '')
+    .replace(/\[\[SHOW_CONTACT_FORM:[\s\S]*$/, '')
+    .replace(/\s*\[\[MOD:(warn|ban)\]\]/g, '')
+    .trim();
 }
 function getLastImage(msgs) {
   for (let i = msgs.length - 1; i >= 0; i--)
@@ -171,6 +175,100 @@ function Cursor() {
   );
 }
 
+// ── ContactFormBubble — inline contact form inside chat ───────────────────────
+const INPUT_STYLE = {
+  background: 'rgba(255,255,255,0.09)',
+  border: '1px solid rgba(255,255,255,0.16)',
+  borderRadius: 10,
+  padding: '8px 12px',
+  color: '#fff',
+  fontSize: 13,
+  outline: 'none',
+  width: '100%',
+  boxSizing: 'border-box',
+  fontFamily: 'inherit',
+};
+
+function ContactFormBubble({ submitted, name, phone, onNameChange, onPhoneChange, onSubmit, sending }) {
+  function handleKey(e) { if (e.key === 'Enter') onSubmit(); }
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity:0, y:20, scale:0.9 }}
+      animate={{ opacity:1, y:0,  scale:1   }}
+      transition={{ type:'spring', stiffness:420, damping:30, mass:0.55 }}
+      style={{ display:'flex', justifyContent:'flex-start' }}
+    >
+      <div style={{ position:'relative', maxWidth:'82%' }}>
+        <TailLeft color={AI_BG} />
+        <div style={{
+          background:   AI_BG,
+          borderRadius: '18px 18px 18px 4px',
+          padding:      '14px 16px',
+          color:        '#fff',
+          fontSize:     14,
+          boxShadow:    '0 4px 16px rgba(0,0,0,0.28), 0 1px 3px rgba(0,0,0,0.18)',
+          minWidth:     210,
+          position:     'relative',
+        }}>
+          {submitted ? (
+            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'2px 0' }}>
+              <Check size={15} style={{ color:'#4ade80', flexShrink:0 }} />
+              <span style={{ lineHeight:1.5 }}>გაგზავნილია! ჩვენი გუნდი დაგიკავშირდება.</span>
+            </div>
+          ) : (
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              <p style={{ margin:0, fontSize:12, opacity:0.58, lineHeight:1.4 }}>
+                შეავსეთ ფორმა — ჩვენი გუნდი დაგიკავშირდება
+              </p>
+              <input
+                className="fins-chat-input"
+                type="text"
+                placeholder="სახელი / კომპანია"
+                value={name}
+                onChange={e => onNameChange(e.target.value)}
+                onKeyDown={handleKey}
+                style={INPUT_STYLE}
+              />
+              <input
+                className="fins-chat-input"
+                type="tel"
+                placeholder="ნომერი *"
+                value={phone}
+                onChange={e => onPhoneChange(e.target.value)}
+                onKeyDown={handleKey}
+                style={INPUT_STYLE}
+              />
+              <motion.button
+                onClick={onSubmit}
+                disabled={!phone.trim() || sending}
+                whileHover={phone.trim() && !sending ? { scale:1.03 } : undefined}
+                whileTap={phone.trim()   && !sending ? { scale:0.96 } : undefined}
+                style={{
+                  background: !phone.trim() || sending
+                    ? 'rgba(79,107,229,0.35)'
+                    : 'linear-gradient(145deg,#4F6BE5,#3851D1)',
+                  border:       'none',
+                  borderRadius: 10,
+                  padding:      '9px',
+                  color:        '#fff',
+                  fontSize:     13,
+                  cursor:       !phone.trim() || sending ? 'not-allowed' : 'pointer',
+                  fontFamily:   'inherit',
+                  transition:   'background 0.15s',
+                }}
+              >
+                {sending ? '...' : 'გაგზავნა'}
+              </motion.button>
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 // ── main ──────────────────────────────────────────────────────────────────────
 // ── FAB shared helpers ────────────────────────────────────────────────────────
 
@@ -226,6 +324,8 @@ export default function AiChat() {
   const [banCountdown, setBanCountdown] = useState(0);
   const [navOpen,      setNavOpen]      = useState(false);
   const [isMobile,     setIsMobile]     = useState(() => window.innerWidth < 1024);
+  const [formValues,   setFormValues]   = useState({ name:'', phone:'' });
+  const [formSending,  setFormSending]  = useState(false);
 
   const inputRef    = useRef(null);
   const bottomRef   = useRef(null);
@@ -309,6 +409,45 @@ export default function AiChat() {
     return () => el.removeEventListener('wheel', onWheel);
   }, [open, messages]); // re-attach when messages change (content height changes)
 
+  // ── contact form submit ───────────────────────────────────────────────────
+  async function handleFormSubmit(msgIdx) {
+    if (formSending || !formValues.phone.trim()) return;
+    setFormSending(true);
+    const name    = formValues.name.trim() || '—';
+    const phone   = formValues.phone.trim();
+    const summary = messages[msgIdx]?.summary || '';
+    const msgBody = [
+      `სახელი / კომპანია: ${name}`,
+      `ნომერი: ${phone}`,
+      summary ? `\nშეჯამება:\n${summary}` : '',
+    ].filter(Boolean).join('\n');
+
+    // Web3Forms — must be called from the browser so the domain key matches
+    fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        access_key: '17019cc7-632a-49f7-9a00-60c011b65520',
+        subject:    `FINS ჩატი — ${name} (${phone})`,
+        from_name:  'FINS AI Chat',
+        name,
+        phone,
+        message:    msgBody,
+      }),
+    }).catch(() => {});
+
+    // Telegram — via server (has bot token)
+    fetch('/api/send-contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, phone, summary }),
+    }).catch(() => {});
+
+    setMessages(prev => prev.map((m, i) => i === msgIdx ? { ...m, submitted:true } : m));
+    setFormValues({ name:'', phone:'' });
+    setFormSending(false);
+  }
+
   // ── send ──────────────────────────────────────────────────────────────────
   async function send() {
     const text = input.trim();
@@ -356,6 +495,14 @@ export default function AiChat() {
           fetch('/api/telegram-notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).catch(()=>{});
         } catch {}
       }
+      const formMatch = acc.match(/\[\[SHOW_CONTACT_FORM:([\s\S]*?)\]\]/);
+      if (formMatch) {
+        try {
+          const d = JSON.parse(formMatch[1]);
+          setMessages(prev => [...prev, { role:'form', summary: d.summary||'', submitted:false }]);
+          setFormValues({ name:'', phone:'' });
+        } catch {}
+      }
     } catch {
       setMessages(prev => { const n=[...prev]; n[n.length-1]={ role:'model', text:'ბოდიში, შეცდომა მოხდა. სცადეთ თავიდან.', uiOnly:true }; return n; });
     } finally { setBusy(false); }
@@ -400,6 +547,18 @@ export default function AiChat() {
             }}
           >
             {messages.map((msg, i) => (
+              msg.role === 'form' ? (
+                <ContactFormBubble
+                  key={`form-${i}`}
+                  submitted={msg.submitted}
+                  name={formValues.name}
+                  phone={formValues.phone}
+                  onNameChange={v => setFormValues(p => ({ ...p, name:v }))}
+                  onPhoneChange={v => setFormValues(p => ({ ...p, phone:v }))}
+                  onSubmit={() => handleFormSubmit(i)}
+                  sending={formSending}
+                />
+              ) : (
               <motion.div
                 key={i}
                 layout                                 // spring-push upward on new msg
@@ -439,6 +598,7 @@ export default function AiChat() {
 
                 </div>
               </motion.div>
+              )
             ))}
             <div ref={bottomRef} />
           </motion.div>

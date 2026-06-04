@@ -370,14 +370,11 @@ export default function AiChat() {
   // ── focus on open ─────────────────────────────────────────────────────────
   useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 120); }, [open]);
 
-  // ── auto-scroll to newest message ────────────────────────────────────────
+  // ── auto-scroll to newest message — always ───────────────────────────────
   useEffect(() => {
     const area = msgAreaRef.current;
     if (!area) return;
-    const nearBottom = area.scrollHeight - area.scrollTop - area.clientHeight < 80;
-    if (nearBottom || busy) {
-      area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
-    }
+    area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
   }, [messages, busy]);
 
   // ── smooth wheel scroll — RAF lerp toward accumulated target ────────────────

@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check } from 'lucide-react';
 
-function OverlayField({ label, value, active, optional }) {
+function OverlayField({ label, value, active, optional, onChange }) {
   return (
     <motion.div
       animate={{
@@ -16,59 +16,33 @@ function OverlayField({ label, value, active, optional }) {
           : '0 0 0 0px rgba(0,0,0,0)',
       }}
       transition={{ duration: 0.22 }}
-      style={{
-        borderRadius: 12,
-        border: '1.5px solid rgba(0,0,0,0.09)',
-        padding: '10px 14px',
-        minHeight: 52,
-      }}
+      style={{ borderRadius: 12, border: '1.5px solid rgba(0,0,0,0.09)', padding: '10px 14px', minHeight: 52 }}
     >
       <p style={{
-        fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
-        letterSpacing: '0.08em',
+        fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
         color: active ? '#4F6BE5' : value ? '#16a34a' : 'rgba(0,0,0,0.35)',
-        margin: '0 0 3px',
-        transition: 'color 0.2s',
-        display: 'flex', alignItems: 'center', gap: 5,
+        margin: '0 0 3px', transition: 'color 0.2s', display: 'flex', alignItems: 'center', gap: 5,
       }}>
         {label}
-        {optional && (
-          <span style={{ color: 'rgba(0,0,0,0.22)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>
-            • სურვილისამებრ
-          </span>
-        )}
+        {optional && <span style={{ color:'rgba(0,0,0,0.22)', fontWeight:400, textTransform:'none', letterSpacing:0 }}>• სურვილისამებრ</span>}
       </p>
-      <AnimatePresence mode="wait">
-        {value ? (
-          <motion.p
-            key={`v-${value.slice(0, 8)}`}
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.18 }}
-            style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', margin: 0, lineHeight: 1.4 }}
-          >
-            {value}
-          </motion.p>
-        ) : (
-          <motion.p
-            key="empty"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.15 }}
-            style={{
-              fontSize: 13, color: active ? 'rgba(79,107,229,0.45)' : 'rgba(0,0,0,0.2)',
-              margin: 0, fontStyle: 'italic',
-            }}
-          >
-            {active ? 'ელოდება...' : '—'}
-          </motion.p>
-        )}
-      </AnimatePresence>
+      <input
+        type="text"
+        value={value}
+        onChange={e => onChange?.(e.target.value)}
+        placeholder={active ? 'ელოდება...' : '—'}
+        style={{
+          width: '100%', border: 'none', outline: 'none', background: 'transparent',
+          fontSize: 14, fontWeight: value ? 600 : 400,
+          color: value ? '#0f172a' : active ? 'rgba(79,107,229,0.45)' : 'rgba(0,0,0,0.22)',
+          fontFamily: 'inherit', padding: 0, lineHeight: 1.4,
+        }}
+      />
     </motion.div>
   );
 }
 
-export default function BookingFormOverlay({ flow, onClose, onSubmit, submitting, submitted, isMobile }) {
+export default function BookingFormOverlay({ flow, onClose, onSubmit, submitting, submitted, isMobile, onEdit }) {
   if (!flow) return null;
 
   const { data, step } = flow;
@@ -156,17 +130,20 @@ export default function BookingFormOverlay({ flow, onClose, onSubmit, submitting
           label="სახელი / კომპანია"
           value={data.name}
           active={step === 'awaiting_name'}
+          onChange={v => onEdit?.('name', v)}
         />
         <OverlayField
           label={contactLabel || 'ტელეფონი / ელ-ფოსტა'}
           value={data.contactValue}
           active={isActiveContact}
+          onChange={v => onEdit?.('contactValue', v)}
         />
         <OverlayField
           label="კომენტარი"
           value={data.comment}
           active={step === 'awaiting_comment'}
           optional
+          onChange={v => onEdit?.('comment', v)}
         />
       </div>
 

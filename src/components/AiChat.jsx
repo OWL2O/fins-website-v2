@@ -504,6 +504,16 @@ export default function AiChat() {
   const isBanned = banCountdown > 0;
 
 
+  // ── welcome message on first open ────────────────────────────────────────
+  useEffect(() => {
+    if (open && messages.length === 0) {
+      setTimeout(() => {
+        setMessages([{ role:'model', text:'გამარჯობა! რით შემიძლია დაგეხმარო?' }]);
+      }, 320);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   // ── focus input whenever chat opens or becomes unbusy ────────────────────
   useEffect(() => {
     if (open && !busy && !isBanned) setTimeout(() => inputRef.current?.focus(), 280);
@@ -887,8 +897,8 @@ export default function AiChat() {
 
   return (
     <>
-      {/* backdrop — closes chat when clicking outside */}
-      {open && (
+      {/* backdrop — closes chat when clicking outside (hidden when booking overlay is active) */}
+      {open && !bookingFlow && (
         <div
           onClick={() => setOpen(false)}
           style={{ position:'fixed', inset:0, zIndex:9998 }}
@@ -1329,6 +1339,7 @@ export default function AiChat() {
             submitting={bookingSubmitting}
             submitted={bookingSubmitted}
             isMobile={isMobile}
+            onEdit={(field, val) => setBookingFlow(prev => prev ? { ...prev, data: { ...prev.data, [field]: val } } : prev)}
           />
         )}
       </AnimatePresence>

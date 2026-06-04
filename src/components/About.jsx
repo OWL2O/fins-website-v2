@@ -63,7 +63,7 @@ export default function About() {
     <section
       ref={sectionRef}
       id="about"
-      className="py-14 sm:py-20 lg:py-28"
+      className="py-14 sm:py-20 lg:py-28 overflow-hidden"
       style={{
         background:
           'linear-gradient(to bottom, #FFFFFF 0, #FFFFFF 1080px, #F8F8F5 1080px, #F8F8F5 100%)',

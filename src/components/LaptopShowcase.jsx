@@ -76,30 +76,6 @@ export default function LaptopShowcase() {
         ))}
       </div>
 
-      {/* Dot indicators */}
-      <div className="flex items-center justify-center gap-2 mt-4">
-        {SCREENS.map((_, i) => (
-          <button
-            key={i}
-            aria-label={`Go to screen ${i + 1}`}
-            onClick={() => {
-              setActive(i)
-              startTimer()
-            }}
-            style={{
-              width: i === active ? '28px' : '8px',
-              height: '8px',
-              borderRadius: '99px',
-              background: i === active ? '#3D64FE' : 'rgba(61,100,254,0.25)',
-              transition: 'width 350ms ease, background 350ms ease',
-              border: 'none',
-              padding: 0,
-              cursor: 'pointer',
-              flexShrink: 0,
-            }}
-          />
-        ))}
-      </div>
     </div>
   )
 }

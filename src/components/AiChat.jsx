@@ -424,7 +424,6 @@ export default function AiChat() {
       }
 
       if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
-        if (!openRef.current) return;
         e.preventDefault();
         const hist = loadHistory();
         if (!hist.length) return;

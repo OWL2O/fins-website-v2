@@ -42,6 +42,16 @@ const SLIDE_MS = 5200
 export default function Hero() {
   const sectionRef = useRef(null)
 
+  // ── Mobile detection ───────────────────────────────────────────────────────
+  const isMobileRef = useRef(window.matchMedia('(max-width:639px)').matches)
+  const [isMobile, setIsMobile] = useState(isMobileRef.current)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width:639px)')
+    const cb = (e) => { isMobileRef.current = e.matches; setIsMobile(e.matches) }
+    mq.addEventListener('change', cb)
+    return () => mq.removeEventListener('change', cb)
+  }, [])
+
   // ── Photo cycling ──────────────────────────────────────────────────────────
   const [photoIdx, setPhotoIdx]       = useState(0)
   const photoIdxRef                   = useRef(0)
@@ -51,7 +61,13 @@ export default function Hero() {
   const photoTimer                    = useRef(null)
 
   // ── Heading driven by current photo ───────────────────────────────────────
-  const [displayLabel, setDisplayLabel] = useState(PHOTOS[0].label)
+  const makeLabel = (idx) => {
+    if (isMobileRef.current) {
+      return `${PHOTOS[idx].label} და ${PHOTOS[(idx + 1) % PHOTOS.length].label}`
+    }
+    return PHOTOS[idx].label
+  }
+  const [displayLabel, setDisplayLabel] = useState(() => makeLabel(0))
   const headingRef                      = useRef(null)
   const headingReady                    = useRef(false)   // skip entrance anim on mount
 
@@ -88,8 +104,11 @@ export default function Hero() {
       duration: 0.28,
       ease: 'power3.in',
       onComplete: () => {
-        // Update the React state — re-render writes new text to the DOM
-        setDisplayLabel(PHOTOS[idx].label)
+        setDisplayLabel(
+          isMobileRef.current
+            ? `${PHOTOS[idx].label} და ${PHOTOS[(idx + 1) % PHOTOS.length].label}`
+            : PHOTOS[idx].label
+        )
       },
     })
   }, [])
@@ -149,7 +168,9 @@ export default function Hero() {
   const resetTimer = useCallback(() => {
     clearInterval(photoTimer.current)
     photoTimer.current = setInterval(() => {
-      setPhotoIdx(a => (a + 1) % PHOTOS.length)
+      // Mobile: step by 2 to advance full pairs; desktop: step by 1
+      const step = isMobileRef.current ? 2 : 1
+      setPhotoIdx(a => (a + step) % PHOTOS.length)
     }, SLIDE_MS)
   }, [])
 
@@ -234,8 +255,8 @@ export default function Hero() {
       id="hero"
       className="relative isolate overflow-hidden text-white -mt-[72px] lg:-mt-[65px] min-[1700px]:-mt-[80px] min-h-screen bg-[#0A0E15] flex flex-col"
     >
-      {/* ── Photo slides (background) ──────────────────────────── */}
-      <div className="absolute inset-0 z-0">
+      {/* ── Photo slides (background) — desktop only ───────────── */}
+      <div className="hidden lg:block absolute inset-0 z-0">
         {PHOTOS.map((photo, i) => (
           <div
             key={photo.label}
@@ -255,6 +276,52 @@ export default function Hero() {
             />
           </div>
         ))}
+      </div>
+
+      {/* ── Mobile: two photos stacked, each half the screen ────── */}
+      <div className="lg:hidden absolute inset-0 z-0">
+        {/* Top half */}
+        <div className="absolute top-0 left-0 right-0 overflow-hidden" style={{ height: '50%' }}>
+          {PHOTOS.map((photo, i) => (
+            <img
+              key={photo.label + '-t'}
+              src={photo.src}
+              alt={photo.label}
+              draggable={false}
+              loading={i <= 1 ? 'eager' : 'lazy'}
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{
+                opacity: i === photoIdx ? 1 : 0,
+                transition: 'opacity 1.1s ease',
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Thin seam between the two photos */}
+        <div
+          aria-hidden="true"
+          className="absolute left-0 right-0 z-[1]"
+          style={{ top: '50%', height: '2px', background: 'rgba(5,8,15,0.85)' }}
+        />
+
+        {/* Bottom half */}
+        <div className="absolute left-0 right-0 bottom-0 overflow-hidden" style={{ top: '50%' }}>
+          {PHOTOS.map((photo, i) => (
+            <img
+              key={photo.label + '-b'}
+              src={photo.src}
+              alt={photo.label}
+              draggable={false}
+              loading={i <= 1 ? 'eager' : 'lazy'}
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{
+                opacity: i === (photoIdx + 1) % PHOTOS.length ? 1 : 0,
+                transition: 'opacity 1.1s ease',
+              }}
+            />
+          ))}
+        </div>
       </div>
 
       {/* ── Mobile overlay — uniform, bottom-heavy ─────────────── */}

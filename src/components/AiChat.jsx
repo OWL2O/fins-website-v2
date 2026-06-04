@@ -68,7 +68,8 @@ function stripSignals(t) {
     .replace(/\[\[SHOW_CONTACT_FORM:[\s\S]*$/, '')
     .replace(/\s*\[\[MOD:(warn|ban)\]\]/g, '')
     .replace(/\s*\[\[START_BOOKING_FLOW\]\]/g, '')
-    .replace(/\[\[SPLIT\]\]/g, ' ')   // collapsed to space during streaming
+    .replace(/\[\[SPLIT\]\]/g, ' ')
+    .replace(/\s*\[\[GENERATE_FOLLOW_UP\]\]/g, '')
     .trim();
 }
 function getLastImage(msgs) {

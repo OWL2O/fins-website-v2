@@ -13,6 +13,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUp, Trash2, X, Sparkles, Ban, Check, History } from 'lucide-react';
+import BookingFormOverlay from './BookingFormOverlay.jsx';
 
 // ── colours ───────────────────────────────────────────────────────────────────
 const AI_BG   = '#1D2748';                           // AI bubble
@@ -66,6 +67,8 @@ function stripSignals(t) {
     .replace(/\[\[ADMIN_(NOTIFY|ALERT):[\s\S]*$/, '')
     .replace(/\[\[SHOW_CONTACT_FORM:[\s\S]*$/, '')
     .replace(/\s*\[\[MOD:(warn|ban)\]\]/g, '')
+    .replace(/\s*\[\[START_BOOKING_FLOW\]\]/g, '')
+    .replace(/\[\[SPLIT\]\]/g, ' ')   // collapsed to space during streaming
     .trim();
 }
 function getLastImage(msgs) {
@@ -358,22 +361,58 @@ function FabInner({ open, isBanned }) {
 }
 
 export default function AiChat() {
-  const [open,         setOpen]         = useState(false);
-  const [messages,     setMessages]     = useState([]);
-  const [input,        setInput]        = useState('');
-  const [busy,         setBusy]         = useState(false);
-  const [bannedUntil,  setBannedUntil]  = useState(0);
-  const [banCountdown, setBanCountdown] = useState(0);
-  const [navOpen,      setNavOpen]      = useState(false);
-  const [formValues,   setFormValues]   = useState({ name:'', phone:'', email:'' });
-  const [formSending,  setFormSending]  = useState(false);
-  const [showHistory,  setShowHistory]  = useState(false);
-  const [history,      setHistory]      = useState(() => loadHistory());
+  const [open,            setOpen]            = useState(false);
+  const [messages,        setMessages]        = useState([]);
+  const [input,           setInput]           = useState('');
+  const [busy,            setBusy]            = useState(false);
+  const [bannedUntil,     setBannedUntil]     = useState(0);
+  const [banCountdown,    setBanCountdown]    = useState(0);
+  const [navOpen,         setNavOpen]         = useState(false);
+  const [formValues,      setFormValues]      = useState({ name:'', phone:'', email:'' });
+  const [formSending,     setFormSending]     = useState(false);
+  const [showHistory,     setShowHistory]     = useState(false);
+  const [history,         setHistory]         = useState(() => loadHistory());
+  const [bookingFlow,     setBookingFlow]     = useState(null);
+  const [bookingSubmitting, setBookingSubmitting] = useState(false);
+  const [bookingSubmitted,  setBookingSubmitted]  = useState(false);
+  const [pendingMsg,      setPendingMsg]      = useState(() => {
+    try {
+      const s = localStorage.getItem('fins_proactive');
+      if (!s) return null;
+      const { text, ts } = JSON.parse(s);
+      if (Date.now() - ts > 2 * 60 * 60 * 1000) { localStorage.removeItem('fins_proactive'); return null; }
+      return text || null;
+    } catch { return null; }
+  });
 
-  const inputRef    = useRef(null);
-  const bottomRef   = useRef(null);
-  const msgAreaRef  = useRef(null);
-  const histMenuRef = useRef(null);
+  const inputRef           = useRef(null);
+  const bottomRef          = useRef(null);
+  const msgAreaRef         = useRef(null);
+  const histMenuRef        = useRef(null);
+  const startBookingFlowRef = useRef(null);
+  const openRef            = useRef(false);
+  const followUpTimerRef   = useRef(null);
+
+  // ── keep openRef in sync (timers read this to avoid firing while chat open) ──
+  useEffect(() => { openRef.current = open; }, [open]);
+
+  // ── restore follow-up timer if page was reloaded while one was scheduled ──
+  useEffect(() => {
+    const raw = sessionStorage.getItem('fins_followup_schedule');
+    if (!raw) return;
+    try {
+      const { fireAt, msgs } = JSON.parse(raw);
+      const remaining = fireAt - Date.now();
+      if (remaining > 0) {
+        followUpTimerRef.current = setTimeout(() => triggerFollowUp(msgs), remaining);
+      } else if (remaining > -10 * 60 * 1000) {
+        triggerFollowUp(msgs); // missed by < 10 min — fire now
+      } else {
+        sessionStorage.removeItem('fins_followup_schedule');
+      }
+    } catch { sessionStorage.removeItem('fins_followup_schedule'); }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── hide widget when mobile nav is open ──────────────────────────────────
   useEffect(() => {
@@ -381,6 +420,49 @@ export default function AiChat() {
     window.addEventListener('navmenu', handler);
     return () => window.removeEventListener('navmenu', handler);
   }, []);
+
+  // ── external booking flow trigger (e.g. Contact page button) ─────────────
+  useEffect(() => {
+    const handler = () => {
+      setOpen(true);
+      setTimeout(() => startBookingFlowRef.current?.(), 380);
+    };
+    window.addEventListener('fins-start-booking', handler);
+    return () => window.removeEventListener('fins-start-booking', handler);
+  }, []);
+
+  // ── A opens · Esc closes · Delete clears chat ────────────────────────────
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'Escape') { setOpen(false); return; }
+
+      if (e.key === 'Delete') {
+        if (!openRef.current) return;
+        if (input.trim()) return;
+        saveSession(messages); setHistory(loadHistory()); setMessages([]);
+        return;
+      }
+
+      if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+        if (!openRef.current) return;
+        e.preventDefault();
+        const hist = loadHistory();
+        if (!hist.length) return;
+        setMessages(hist[0].messages);
+        setOpen(true);
+        return;
+      }
+
+      if (e.key !== 'a' && e.key !== 'A' && e.key !== 'ა') return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const tag = document.activeElement?.tagName;
+      const editable = document.activeElement?.isContentEditable;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || editable) return;
+      setOpen(true);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [open, input, messages]);
 
   // ── close history menu on outside click ───────────────────────────────────
   useEffect(() => {
@@ -414,8 +496,10 @@ export default function AiChat() {
   const isBanned = banCountdown > 0;
 
 
-  // ── focus on open ─────────────────────────────────────────────────────────
-  useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 120); }, [open]);
+  // ── focus input whenever chat opens or becomes unbusy ────────────────────
+  useEffect(() => {
+    if (open && !busy && !isBanned) setTimeout(() => inputRef.current?.focus(), 280);
+  }, [open, busy, isBanned]);
 
   // ── auto-scroll to newest message — always ───────────────────────────────
   useEffect(() => {
@@ -496,12 +580,222 @@ export default function AiChat() {
     setFormSending(false);
   }
 
+  // ── proactive follow-up helpers ───────────────────────────────────────────
+  function scheduleFollowUp(msgs) {
+    if (followUpTimerRef.current) clearTimeout(followUpTimerRef.current);
+    const apiMsgs = msgs
+      .filter(m => !m.uiOnly && m.role !== 'form' && m.role !== 'choice' && m.text?.trim())
+      .slice(-8)
+      .map(m => ({ role: m.role === 'model' ? 'assistant' : 'user', content: m.text }));
+    if (apiMsgs.length < 2) return;
+    const delay = Math.floor((3 + Math.random() * 9) * 60 * 1000); // 3–12 min
+    sessionStorage.setItem('fins_followup_schedule', JSON.stringify({ fireAt: Date.now() + delay, msgs: apiMsgs }));
+    followUpTimerRef.current = setTimeout(() => triggerFollowUp(apiMsgs), delay);
+  }
+
+  async function triggerFollowUp(convMsgs) {
+    sessionStorage.removeItem('fins_followup_schedule');
+    if (openRef.current) return;
+    try {
+      const res = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...convMsgs, { role: 'user', content: '[[GENERATE_FOLLOW_UP]]' }],
+          warningCount: 0,
+          language: 'ka',
+        }),
+      });
+      if (!res.ok || !res.body) return;
+      const reader = res.body.getReader(); const dec = new TextDecoder(); let text = '';
+      while (true) {
+        const { done, value } = await reader.read(); if (done) break;
+        text += dec.decode(value, { stream: true });
+      }
+      const clean = stripSignals(text).trim();
+      if (!clean || openRef.current) return;
+      setPendingMsg(clean);
+      localStorage.setItem('fins_proactive', JSON.stringify({ text: clean, ts: Date.now() }));
+    } catch {}
+  }
+
+  // ── booking flow helpers ──────────────────────────────────────────────────
+  function startBookingFlow() {
+    setBookingSubmitted(false);
+    setBookingSubmitting(false);
+    setBookingFlow(null);
+    setMessages(prev => [...prev, { role:'model', text:'კარგი.' }]);
+    setTimeout(() => {
+      setMessages(prev => [...prev, { role:'model', text:'მოდი, ყველაფერი მოვაწყოთ.' }]);
+      setBookingFlow({ step:'awaiting_name', data:{ name:'', contactType:null, contactValue:'', comment:'' } });
+      setTimeout(() => {
+        setMessages(prev => [...prev, { role:'model', text:'შენი სახელი ან კომპანიის სახელი?' }]);
+      }, 680);
+    }, 680);
+  }
+  startBookingFlowRef.current = startBookingFlow;
+
+  function finishBookingFlow(finalData) {
+    setBookingFlow({ step:'done', data:finalData });
+    setTimeout(() => {
+      setMessages(prev => [...prev, { role:'model', text:'ყველაფერი ჩაიწერა — ფორმაზე დააჭირე გასაგზავნად.' }]);
+    }, 420);
+  }
+
+  async function submitBookingFlow(finalData) {
+    setBookingSubmitting(true);
+    const { name, contactType, contactValue, comment } = finalData;
+    const msgBody = [
+      `სახელი / კომპანია: ${name}`,
+      contactType === 'email' ? `ელ-ფოსტა: ${contactValue}` : `ტელეფონი: ${contactValue}`,
+      comment ? `კომენტარი: ${comment}` : '',
+    ].filter(Boolean).join('\n');
+    fetch('https://api.web3forms.com/submit', {
+      method:'POST', headers:{'Content-Type':'application/json', Accept:'application/json'},
+      body: JSON.stringify({
+        access_key: '17019cc7-632a-49f7-9a00-60c011b65520',
+        subject: `FINS AI ჯავშანი — ${name}`,
+        from_name: 'FINS Booking Flow',
+        name,
+        [contactType === 'email' ? 'email' : 'phone']: contactValue,
+        message: msgBody,
+      }),
+    }).catch(() => {});
+    fetch('/api/send-contact', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        name,
+        phone: contactType === 'phone' ? contactValue : undefined,
+        email: contactType === 'email' ? contactValue : undefined,
+        summary: comment || 'AI ჯავშნის ფლო',
+      }),
+    }).catch(() => {});
+    setBookingSubmitting(false);
+    setBookingSubmitted(true);
+    setTimeout(() => {
+      setBookingFlow(null);
+      setBookingSubmitted(false);
+    }, 2000);
+  }
+
+  function extractName(text) {
+    const t = text.trim();
+    // Common Georgian sentence patterns → extract the actual name/company after the verb
+    const patterns = [
+      /(?:ჩემს?\s+კომპანიას?\s+(?:ჰქვია|ქვია|ერქვა|ეწოდება))\s+(.+)/i,
+      /(?:კომპანი(?:ის|ა|ის\s+სახელია?|ა\s+ჰქვია|ა\s+ქვია))\s*[:—-]?\s*(.+)/i,
+      /(?:მე?\s+)?(?:ვარ|ვიყავი|მქვია|მეწოდება|ჰქვია|ქვია)\s+(.+)/i,
+      /(?:სახელი(?:\s+არის?|\s+ჰქვია)?)\s*[:—-]?\s*(.+)/i,
+      /(?:ორგანიზაცია|ფირმა|სახელი)\s*[:—-]\s*(.+)/i,
+    ];
+    for (const re of patterns) {
+      const m = t.match(re);
+      if (m?.[1]?.trim()) return m[1].trim();
+    }
+    return t; // no pattern matched — use as-is
+  }
+
+  function handleBookingStep(text) {
+    const { step, data } = bookingFlow;
+    switch (step) {
+      case 'awaiting_name': {
+        const extracted = extractName(text);
+        const newData = { ...data, name: extracted };
+        setBookingFlow({ step:'awaiting_contact_type', data: newData });
+        setTimeout(() => {
+          setMessages(prev => [...prev,
+            { role:'model', text:'სად გამოგიკავშირდეთ — ტელეფონით თუ ელ-ფოსტით?' },
+            { role:'choice', options:['ტელეფონით', 'ელ-ფოსტით'], handled:false },
+          ]);
+        }, 420);
+        break;
+      }
+      case 'awaiting_phone':
+      case 'awaiting_email': {
+        const newData = { ...data, contactValue: text };
+        setBookingFlow({ step:'comment_decision', data: newData });
+        setTimeout(() => {
+          setMessages(prev => [...prev,
+            { role:'model', text:'მშვენიერია! გინდა კომენტარი დაუმატო?' },
+            { role:'choice', options:['კი, დავამატებ', 'არა, ასე გაგზავნე'], handled:false },
+          ]);
+        }, 420);
+        break;
+      }
+      case 'awaiting_comment': {
+        finishBookingFlow({ ...data, comment: text });
+        break;
+      }
+    }
+  }
+
+  function handleChoiceSelect(choice, msgIndex) {
+    setMessages(prev => prev.map((m, i) =>
+      i === msgIndex ? { ...m, handled:true, selected:choice } : m
+    ));
+    setMessages(prev => [...prev, { role:'user', text:choice }]);
+    const { step, data } = bookingFlow;
+    if (step === 'awaiting_contact_type') {
+      if (choice === 'ტელეფონით') {
+        setBookingFlow({ step:'awaiting_phone', data:{ ...data, contactType:'phone' } });
+        setTimeout(() => setMessages(prev => [...prev, { role:'model', text:'კარგი, ნომერი?' }]), 420);
+      } else {
+        setBookingFlow({ step:'awaiting_email', data:{ ...data, contactType:'email' } });
+        setTimeout(() => setMessages(prev => [...prev, { role:'model', text:'კარგი, ელ-ფოსტა?' }]), 420);
+      }
+    } else if (step === 'comment_decision') {
+      if (choice === 'კი, დავამატებ') {
+        setBookingFlow({ step:'awaiting_comment', data });
+        setTimeout(() => setMessages(prev => [...prev, { role:'model', text:'დაწერე:' }]), 420);
+      } else {
+        finishBookingFlow(data);
+      }
+    }
+  }
+
   // ── send ──────────────────────────────────────────────────────────────────
   async function send() {
     const text = input.trim();
     if (!text || busy || isBanned) return;
     const ban = getBanData();
     if (ban.bannedUntil > Date.now()) return;
+
+    // ── Booking flow intercept ──────────────────────────────────────────────
+    if (bookingFlow && bookingFlow.step !== 'done') {
+      setInput('');
+      const { step, data } = bookingFlow;
+      if (step === 'awaiting_contact_type') {
+        const isPhone = /ტელ|phone|\d{3}|ნომ/i.test(text);
+        const choice = isPhone ? 'ტელეფონით' : 'ელ-ფოსტით';
+        setMessages(prev => {
+          const idx = [...prev].reverse().findIndex(m => m.role === 'choice' && !m.handled);
+          if (idx === -1) return [...prev, { role:'user', text }];
+          const real = prev.length - 1 - idx;
+          return prev.map((m, i) => i === real ? { ...m, handled:true, selected:choice } : m).concat({ role:'user', text });
+        });
+        if (isPhone) {
+          setBookingFlow({ step:'awaiting_phone', data:{ ...data, contactType:'phone' } });
+          setTimeout(() => setMessages(prev => [...prev, { role:'model', text:'კარგი, ნომერი?' }]), 420);
+        } else {
+          setBookingFlow({ step:'awaiting_email', data:{ ...data, contactType:'email' } });
+          setTimeout(() => setMessages(prev => [...prev, { role:'model', text:'კარგი, ელ-ფოსტა?' }]), 420);
+        }
+        return;
+      }
+      if (step === 'comment_decision') {
+        setMessages(prev => {
+          const idx = [...prev].reverse().findIndex(m => m.role === 'choice' && !m.handled);
+          const arr = [...prev];
+          if (idx !== -1) arr[prev.length - 1 - idx] = { ...arr[prev.length - 1 - idx], handled:true, selected:'კი, დავამატებ' };
+          return [...arr, { role:'user', text }];
+        });
+        finishBookingFlow({ ...data, comment: text });
+        return;
+      }
+      setMessages(prev => [...prev, { role:'user', text }]);
+      handleBookingStep(text);
+      return;
+    }
 
     setInput('');
     const userMsg = { role:'user', text };
@@ -529,7 +823,25 @@ export default function AiChat() {
       const modMatch   = acc.match(/\[\[MOD:(warn|ban)\]\]/);
       const adminMatch = acc.match(/\[\[ADMIN_NOTIFY:([\s\S]*?)\]\]/) ?? acc.match(/\[\[ADMIN_ALERT:([\s\S]*?)\]\]/);
       const clean      = stripSignals(acc);
-      setMessages(prev => { const n=[...prev]; n[n.length-1]={ role:'model', text:clean }; return n; });
+
+      // ── Two-bubble split ────────────────────────────────────────────────────
+      if (acc.includes('[[SPLIT]]')) {
+        const rawParts = acc.split('[[SPLIT]]');
+        const p1 = stripSignals(rawParts[0]);
+        const p2 = stripSignals(rawParts.slice(1).join(' '));
+        if (p1 && p2) {
+          setMessages(prev => { const n=[...prev]; n[n.length-1]={ role:'model', text:p1 }; return n; });
+          setTimeout(() => setMessages(prev => [...prev, { role:'model', text:p2 }]), 720);
+        } else {
+          const merged = (p1 || p2).trim();
+          if (!merged) setMessages(prev => prev.slice(0, -1));
+          else setMessages(prev => { const n=[...prev]; n[n.length-1]={ role:'model', text:merged }; return n; });
+        }
+      } else if (!clean) {
+        setMessages(prev => prev.slice(0, -1));
+      } else {
+        setMessages(prev => { const n=[...prev]; n[n.length-1]={ role:'model', text:clean }; return n; });
+      }
 
       if (modMatch) {
         const l = getBanData();
@@ -550,6 +862,9 @@ export default function AiChat() {
           setMessages(prev => [...prev, { role:'form', summary: d.summary||'', submitted:false }]);
           setFormValues({ name:'', phone:'' });
         } catch {}
+      }
+      if (acc.includes('[[START_BOOKING_FLOW]]')) {
+        startBookingFlow();
       }
     } catch {
       setMessages(prev => { const n=[...prev]; n[n.length-1]={ role:'model', text:'ბოდიში, შეცდომა მოხდა. სცადეთ თავიდან.', uiOnly:true }; return n; });
@@ -579,6 +894,7 @@ export default function AiChat() {
         {open && messages.length > 0 && (
           <motion.div
             ref={msgAreaRef}
+            onClick={() => inputRef.current?.focus()}
             initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
             transition={{ duration:0.2 }}
             style={{
@@ -616,6 +932,45 @@ export default function AiChat() {
                   onSubmit={() => handleFormSubmit(i)}
                   sending={formSending}
                 />
+              ) : msg.role === 'choice' ? (
+                <motion.div
+                  key={`choice-${i}`}
+                  layout
+                  initial={{ opacity:0, y:16, scale:0.9 }}
+                  animate={{ opacity:1, y:0,  scale:1   }}
+                  transition={{ type:'spring', stiffness:420, damping:30, mass:0.55 }}
+                  style={{ display:'flex', flexWrap:'wrap', gap:8, justifyContent:'flex-start', paddingLeft:4 }}
+                >
+                  {msg.options.map(opt => (
+                    <motion.button
+                      key={opt}
+                      onClick={!msg.handled ? () => handleChoiceSelect(opt, i) : undefined}
+                      whileHover={!msg.handled ? { scale:1.04 } : undefined}
+                      whileTap={!msg.handled ? { scale:0.94 } : undefined}
+                      style={{
+                        padding:'8px 18px',
+                        borderRadius:20,
+                        border: msg.handled
+                          ? '1.5px solid rgba(255,255,255,0.09)'
+                          : '1.5px solid rgba(79,107,229,0.55)',
+                        background: msg.handled
+                          ? (msg.selected === opt ? 'rgba(79,107,229,0.22)' : 'transparent')
+                          : 'rgba(79,107,229,0.14)',
+                        color: msg.handled
+                          ? (msg.selected === opt ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.22)')
+                          : 'rgba(255,255,255,0.88)',
+                        fontSize:13, fontWeight:600,
+                        cursor: msg.handled ? 'default' : 'pointer',
+                        fontFamily:'inherit',
+                        backdropFilter:'blur(8px)',
+                        WebkitBackdropFilter:'blur(8px)',
+                        transition:'background 0.15s, color 0.15s, border-color 0.15s',
+                      }}
+                    >
+                      {opt}
+                    </motion.button>
+                  ))}
+                </motion.div>
               ) : (
               <motion.div
                 key={i}
@@ -848,7 +1203,20 @@ export default function AiChat() {
             whileHover={{ scale:1.07 }}
             whileTap={{ scale:0.90 }}
             onClick={() => {
-              if (open && messages.length > 0) { saveSession(messages); setHistory(loadHistory()); }
+              if (open) {
+                if (messages.length > 0) { saveSession(messages); setHistory(loadHistory()); }
+                if (bookingFlow) { setBookingFlow(null); setBookingSubmitted(false); }
+                const realMsgs = messages.filter(m => !m.uiOnly && m.role !== 'form' && m.role !== 'choice');
+                if (realMsgs.length >= 3) scheduleFollowUp(realMsgs);
+              } else {
+                if (pendingMsg) {
+                  setTimeout(() => {
+                    setMessages(prev => [...prev, { role:'model', text: pendingMsg }]);
+                    setPendingMsg(null);
+                    localStorage.removeItem('fins_proactive');
+                  }, 880);
+                }
+              }
               setOpen(o => !o);
             }}
             aria-label="AI ასისტენტი"
@@ -861,11 +1229,46 @@ export default function AiChat() {
                 transition={{ duration:3.8, repeat:Infinity, ease:'easeInOut' }}
               />
             )}
+            <AnimatePresence>
+              {pendingMsg && !open && (
+                <motion.span
+                  initial={{ scale:0 }}
+                  animate={{ scale:1 }}
+                  exit={{ scale:0 }}
+                  transition={{ type:'spring', stiffness:500, damping:22 }}
+                  style={{
+                    position:'absolute', top:-3, right:-3,
+                    width:19, height:19, borderRadius:'50%',
+                    background:'#ef4444',
+                    border:'2.5px solid #0f172a',
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    color:'#fff', fontSize:10, fontWeight:800, lineHeight:1,
+                    boxShadow:'0 2px 8px rgba(239,68,68,0.55)',
+                    zIndex:1, pointerEvents:'none',
+                  }}
+                >
+                  1
+                </motion.span>
+              )}
+            </AnimatePresence>
             <FabInner open={open} isBanned={isBanned} />
           </motion.button>
 
         </div>
       </div>
+
+      {/* ── Booking form overlay — centered card, visible during guided flow ── */}
+      <AnimatePresence>
+        {bookingFlow && (
+          <BookingFormOverlay
+            flow={bookingFlow}
+            onClose={() => { setBookingFlow(null); setBookingSubmitted(false); }}
+            onSubmit={() => submitBookingFlow(bookingFlow.data)}
+            submitting={bookingSubmitting}
+            submitted={bookingSubmitted}
+          />
+        )}
+      </AnimatePresence>
 
     </>
   );

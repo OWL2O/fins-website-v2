@@ -175,7 +175,7 @@ export default async function handler(req, res) {
   const basePayload = {
     systemInstruction: { parts: [{ text: systemInstruction }] },
     tools: [NBG_TOOL],
-    generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
+    generationConfig: { temperature: 0.7, maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } },
   };
 
   // ── Model fallback chain ──

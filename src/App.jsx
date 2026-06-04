@@ -6,6 +6,7 @@ import Terms from './pages/Terms.jsx'
 import Security from './pages/Security.jsx'
 import Offer from './pages/Offer.jsx'
 import Contact from './pages/Contact.jsx'
+import ChatWidget from './components/ChatWidget.jsx'
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
         {/* catch-all: any unknown path → home */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <ChatWidget />
     </>
   )
 }

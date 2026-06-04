@@ -10,6 +10,7 @@ import {
   CheckCircle,
   AlertCircle,
   Loader,
+  Sparkles,
 } from 'lucide-react'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
@@ -284,6 +285,25 @@ export default function Contact() {
                 და შემოგთავაზებს ოპტიმალური გადაწყვეტილებებს.
               </p>
             </div>
+
+            {/* AI booking helper */}
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('fins-start-booking'))}
+              className="mt-4 w-full flex items-center gap-3 p-4 rounded-2xl border border-white/[0.09] bg-white/[0.03] hover:bg-white/[0.06] hover:border-brand-500/30 transition-colors duration-200 text-left group"
+            >
+              <div className="h-9 w-9 flex items-center justify-center rounded-lg bg-brand-600/15 border border-brand-500/20 shrink-0 text-brand-400 group-hover:bg-brand-600/25 transition-colors">
+                <Sparkles size={15} />
+              </div>
+              <div>
+                <p className="text-[13px] font-bold text-white/80 group-hover:text-white transition-colors">
+                  AI-ის დახმარებით შეავსე
+                </p>
+                <p className="text-[11px] font-medium text-white/35 mt-0.5">
+                  ჩატი გეხმარება ნაბიჯ-ნაბიჯ
+                </p>
+              </div>
+            </button>
           </motion.aside>
         </div>
       </div>

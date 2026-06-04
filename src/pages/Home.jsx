@@ -8,7 +8,6 @@ import Accounting from '../components/Accounting.jsx'
 import FAQ from '../components/FAQ.jsx'
 import CTA from '../components/CTA.jsx'
 import Footer from '../components/Footer.jsx'
-import ChatWidget from '../components/ChatWidget.jsx'
 import ContactBanner from '../components/ContactBanner.jsx'
 
 export default function Home() {
@@ -45,7 +44,6 @@ export default function Home() {
           <Footer />
         </div>
       </main>
-      <ChatWidget />
     </div>
   )
 }

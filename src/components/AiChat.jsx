@@ -656,7 +656,14 @@ export default function AiChat() {
   function finishBookingFlow(finalData) {
     setBookingFlow({ step:'done', data:finalData });
     setTimeout(() => {
-      setMessages(prev => [...prev, { role:'model', text:'ყველაფერი ჩაიწერა — ფორმაზე დააჭირე გასაგზავნად.' }]);
+      if (isMobile) {
+        setMessages(prev => [...prev,
+          { role:'model', text:'ყველაფერი ჩაიწერა.' },
+          { role:'send_btn', data: finalData, submitted: false },
+        ]);
+      } else {
+        setMessages(prev => [...prev, { role:'model', text:'ყველაფერი ჩაიწერა — ფორმაზე დააჭირე გასაგზავნად.' }]);
+      }
     }, 420);
   }
 
@@ -690,6 +697,8 @@ export default function AiChat() {
     }).catch(() => {});
     setBookingSubmitting(false);
     setBookingSubmitted(true);
+    // Mark inline send button as submitted (mobile)
+    setMessages(prev => prev.map(m => m.role === 'send_btn' ? { ...m, submitted: true } : m));
     setTimeout(() => {
       setBookingFlow(null);
       setBookingSubmitted(false);
@@ -987,6 +996,38 @@ export default function AiChat() {
                   onSubmit={() => handleFormSubmit(i)}
                   sending={formSending}
                 />
+              ) : msg.role === 'send_btn' ? (
+                <motion.div
+                  key={`sendbtn-${i}`}
+                  layout
+                  initial={{ opacity:0, y:16, scale:0.9 }}
+                  animate={{ opacity:1, y:0,  scale:1   }}
+                  transition={{ type:'spring', stiffness:420, damping:30, mass:0.55 }}
+                  style={{ display:'flex', justifyContent:'flex-start', paddingLeft:4 }}
+                >
+                  <motion.button
+                    onClick={!msg.submitted && !bookingSubmitting ? () => submitBookingFlow(msg.data) : undefined}
+                    whileHover={!msg.submitted ? { scale:1.03 } : undefined}
+                    whileTap={!msg.submitted ? { scale:0.95 } : undefined}
+                    style={{
+                      background: msg.submitted
+                        ? 'rgba(34,197,94,0.15)'
+                        : 'linear-gradient(145deg,#4F6BE5,#3851D1)',
+                      border: msg.submitted ? '1.5px solid rgba(34,197,94,0.35)' : 'none',
+                      borderRadius: 20,
+                      padding: '13px 28px',
+                      color: msg.submitted ? '#4ade80' : '#fff',
+                      fontSize: 15, fontWeight: 700,
+                      cursor: msg.submitted ? 'default' : 'pointer',
+                      fontFamily: 'inherit',
+                      boxShadow: msg.submitted ? 'none' : '0 4px 18px rgba(59,81,209,0.45)',
+                      minWidth: 160,
+                      transition: 'background 0.2s',
+                    }}
+                  >
+                    {msg.submitted ? '✓ გაგზავნილია!' : bookingSubmitting ? '...' : 'გაგზავნა'}
+                  </motion.button>
+                </motion.div>
               ) : msg.role === 'choice' ? (
                 <motion.div
                   key={`choice-${i}`}

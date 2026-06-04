@@ -181,7 +181,7 @@ export default async function handler(req, res) {
   // ── Model fallback chain ──
   // Try the preferred (best-quality) model first; if it's rate-limited (429)
   // or unavailable, fall back to the next. Dedupe so we never try one twice.
-  const MODELS = [getModel(), 'gemini-2.5-flash-lite', 'gemini-2.0-flash']
+  const MODELS = [getModel(), 'gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-1.5-flash']
     .filter((v, i, a) => v && a.indexOf(v) === i);
 
   // ── Phase 1: non-streaming call to detect function calls ──
@@ -201,8 +201,9 @@ export default async function handler(req, res) {
       continue;
     }
     if (r.status === 429 || r.status === 404 || r.status === 503 || r.status === 500 || r.status === 529) {
-      // quota / unavailable / overloaded → try next model
-      console.warn(`[ai-chat] ${m} → ${r.status}, falling back`);
+      // quota / unavailable / overloaded / deprecated → try next model
+      const hint = await r.text().catch(() => '');
+      console.warn(`[ai-chat] ${m} → ${r.status}, falling back. hint: ${hint.slice(0, 120)}`);
       lastStatus = r.status;
       continue;
     }
@@ -215,7 +216,7 @@ export default async function handler(req, res) {
   }
   if (!phase1.ok) {
     const errText = await phase1.text().catch(() => '');
-    console.error('[ai-chat] Gemini error', phase1.status, errText);
+    console.error(`[ai-chat] Gemini error ${phase1.status} model=${MODEL}`, errText.slice(0, 400));
     return sendJson(res, 502, { error: 'AI დროებით მიუწვდომელია.' });
   }
 

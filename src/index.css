@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Prevent any element from causing horizontal scroll at the document level */
+html, body, #root {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
 /* Hide scrollbar in webkit browsers for the AI chat message area */
 .fins-msg-area::-webkit-scrollbar { display: none; }
 

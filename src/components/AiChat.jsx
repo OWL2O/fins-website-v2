@@ -383,44 +383,15 @@ export default function AiChat() {
   const [bookingFlow,     setBookingFlow]     = useState(null);
   const [bookingSubmitting, setBookingSubmitting] = useState(false);
   const [bookingSubmitted,  setBookingSubmitted]  = useState(false);
-  const [pendingMsg,      setPendingMsg]      = useState(() => {
-    try {
-      const s = localStorage.getItem('fins_proactive');
-      if (!s) return null;
-      const { text, ts } = JSON.parse(s);
-      if (Date.now() - ts > 2 * 60 * 60 * 1000) { localStorage.removeItem('fins_proactive'); return null; }
-      return text || null;
-    } catch { return null; }
-  });
-
   const inputRef           = useRef(null);
   const bottomRef          = useRef(null);
   const msgAreaRef         = useRef(null);
   const histMenuRef        = useRef(null);
   const startBookingFlowRef = useRef(null);
   const openRef            = useRef(false);
-  const followUpTimerRef   = useRef(null);
 
-  // ── keep openRef in sync (timers read this to avoid firing while chat open) ──
+  // ── keep openRef in sync ──────────────────────────────────────────────────
   useEffect(() => { openRef.current = open; }, [open]);
-
-  // ── restore follow-up timer if page was reloaded while one was scheduled ──
-  useEffect(() => {
-    const raw = sessionStorage.getItem('fins_followup_schedule');
-    if (!raw) return;
-    try {
-      const { fireAt, msgs } = JSON.parse(raw);
-      const remaining = fireAt - Date.now();
-      if (remaining > 0) {
-        followUpTimerRef.current = setTimeout(() => triggerFollowUp(msgs), remaining);
-      } else if (remaining > -10 * 60 * 1000) {
-        triggerFollowUp(msgs); // missed by < 10 min — fire now
-      } else {
-        sessionStorage.removeItem('fins_followup_schedule');
-      }
-    } catch { sessionStorage.removeItem('fins_followup_schedule'); }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // ── hide widget when mobile nav is open ──────────────────────────────────
   useEffect(() => {
@@ -596,45 +567,6 @@ export default function AiChat() {
     setMessages(prev => prev.map((m, i) => i === msgIdx ? { ...m, submitted:true } : m));
     setFormValues({ name:'', phone:'', email:'' });
     setFormSending(false);
-  }
-
-  // ── proactive follow-up helpers ───────────────────────────────────────────
-  function scheduleFollowUp(msgs) {
-    if (followUpTimerRef.current) clearTimeout(followUpTimerRef.current);
-    const apiMsgs = msgs
-      .filter(m => !m.uiOnly && m.role !== 'form' && m.role !== 'choice' && m.text?.trim())
-      .slice(-8)
-      .map(m => ({ role: m.role === 'model' ? 'assistant' : 'user', content: m.text }));
-    if (apiMsgs.length < 2) return;
-    const delay = Math.floor((3 + Math.random() * 9) * 60 * 1000); // 3–12 min
-    sessionStorage.setItem('fins_followup_schedule', JSON.stringify({ fireAt: Date.now() + delay, msgs: apiMsgs }));
-    followUpTimerRef.current = setTimeout(() => triggerFollowUp(apiMsgs), delay);
-  }
-
-  async function triggerFollowUp(convMsgs) {
-    sessionStorage.removeItem('fins_followup_schedule');
-    if (openRef.current) return;
-    try {
-      const res = await fetch('/api/ai-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [...convMsgs, { role: 'user', content: '[[GENERATE_FOLLOW_UP]]' }],
-          warningCount: 0,
-          language: 'ka',
-        }),
-      });
-      if (!res.ok || !res.body) return;
-      const reader = res.body.getReader(); const dec = new TextDecoder(); let text = '';
-      while (true) {
-        const { done, value } = await reader.read(); if (done) break;
-        text += dec.decode(value, { stream: true });
-      }
-      const clean = stripSignals(text).trim();
-      if (!clean || openRef.current) return;
-      setPendingMsg(clean);
-      localStorage.setItem('fins_proactive', JSON.stringify({ text: clean, ts: Date.now() }));
-    } catch {}
   }
 
   // ── booking flow helpers ──────────────────────────────────────────────────
@@ -1319,16 +1251,6 @@ export default function AiChat() {
               if (open) {
                 if (messages.length > 0) { saveSession(messages); setHistory(loadHistory()); }
                 if (bookingFlow) { setBookingFlow(null); setBookingSubmitted(false); }
-                const realMsgs = messages.filter(m => !m.uiOnly && m.role !== 'form' && m.role !== 'choice');
-                if (realMsgs.length >= 3) scheduleFollowUp(realMsgs);
-              } else {
-                if (pendingMsg) {
-                  setTimeout(() => {
-                    setMessages(prev => [...prev, { role:'model', text: pendingMsg }]);
-                    setPendingMsg(null);
-                    localStorage.removeItem('fins_proactive');
-                  }, 880);
-                }
               }
               setOpen(o => !o);
             }}
@@ -1342,28 +1264,6 @@ export default function AiChat() {
                 transition={{ duration:3.8, repeat:Infinity, ease:'easeInOut' }}
               />
             )}
-            <AnimatePresence>
-              {pendingMsg && !open && (
-                <motion.span
-                  initial={{ scale:0 }}
-                  animate={{ scale:1 }}
-                  exit={{ scale:0 }}
-                  transition={{ type:'spring', stiffness:500, damping:22 }}
-                  style={{
-                    position:'absolute', top:-3, right:-3,
-                    width:19, height:19, borderRadius:'50%',
-                    background:'#ef4444',
-                    border:'2.5px solid #0f172a',
-                    display:'flex', alignItems:'center', justifyContent:'center',
-                    color:'#fff', fontSize:10, fontWeight:800, lineHeight:1,
-                    boxShadow:'0 2px 8px rgba(239,68,68,0.55)',
-                    zIndex:1, pointerEvents:'none',
-                  }}
-                >
-                  1
-                </motion.span>
-              )}
-            </AnimatePresence>
             <FabInner open={open} isBanned={isBanned} />
           </motion.button>
 

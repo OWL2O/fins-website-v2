@@ -97,26 +97,24 @@ export default function Offer() {
       </div>
 
       {/* ── Page background ───────────────────────────────────────────────── */}
-      <div className="bg-[#eef1f5] min-h-screen py-8 px-4 print:bg-[#eef1f5] print:py-0">
+      <div className="bg-[#eef1f5] min-h-screen py-4 sm:py-8 px-3 sm:px-4 print:bg-[#eef1f5] print:py-0">
         <div className="doc-card mx-auto max-w-[680px] bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.10)] overflow-hidden">
 
           {/* ── Blue header ───────────────────────────────────────────────── */}
-          <div className="bg-[#1A56CC] px-7 py-5 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src="/logo.svg" alt="FINS" className="h-10 w-auto brightness-0 invert" />
-              <div>
-                <p className="text-white text-[13px] font-light opacity-80 leading-none mt-0.5">
-                  შპს ფინს პროგრამ სერვისი
-                </p>
-              </div>
+          <div className="bg-[#1A56CC] px-5 sm:px-7 py-4 sm:py-5 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <img src="/logo.svg" alt="FINS" className="h-9 w-auto brightness-0 invert shrink-0" />
+              <p className="text-white text-[12px] sm:text-[13px] font-light opacity-80 leading-snug">
+                შპს ფინს პროგრამ სერვისი
+              </p>
             </div>
-            <span className="px-4 py-2 rounded-full border-2 border-white/40 text-white text-[12px] font-semibold tracking-wide">
+            <span className="shrink-0 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border-2 border-white/40 text-white text-[11px] sm:text-[12px] font-semibold tracking-wide whitespace-nowrap">
               საბანკო რეკვიზიტები
             </span>
           </div>
 
           {/* ── Body ──────────────────────────────────────────────────────── */}
-          <div className="px-7 pt-7 pb-8 space-y-7">
+          <div className="px-4 sm:px-7 pt-5 sm:pt-7 pb-6 sm:pb-8 space-y-5 sm:space-y-7">
 
             {/* Section: Payer info */}
             <div>
@@ -134,12 +132,12 @@ export default function Offer() {
                 ].map((row, i, arr) => (
                   <div
                     key={row.label}
-                    className={`flex items-start gap-4 px-5 py-3.5 ${i < arr.length - 1 ? 'border-b border-gray-100' : ''}`}
+                    className={`flex flex-col sm:flex-row sm:items-start gap-0.5 sm:gap-4 px-4 sm:px-5 py-3 sm:py-3.5 ${i < arr.length - 1 ? 'border-b border-gray-100' : ''}`}
                   >
-                    <span className="text-[12.5px] text-gray-400 font-medium w-[160px] shrink-0 leading-snug pt-px">
+                    <span className="text-[11px] sm:text-[12.5px] text-gray-400 font-medium sm:w-[160px] sm:shrink-0 leading-snug">
                       {row.label}
                     </span>
-                    <span className={`text-[13px] leading-snug ${row.bold ? 'font-bold text-gray-800' : 'text-gray-700'} ${row.mono ? 'font-mono' : ''}`}>
+                    <span className={`text-[13px] sm:text-[13px] leading-snug break-all ${row.bold ? 'font-bold text-gray-800' : 'text-gray-700'} ${row.mono ? 'font-mono tracking-tight' : ''}`}>
                       {row.value}
                     </span>
                   </div>
@@ -154,7 +152,7 @@ export default function Offer() {
               </h2>
 
               <div className="rounded-xl border border-gray-200 overflow-hidden">
-                <div className="flex items-center gap-4 px-5 py-4">
+                <div className="flex items-center gap-4 px-4 sm:px-5 py-4">
                   <div className="shrink-0">
                     <p className="text-[12px] text-gray-400 font-medium leading-none">ტარიფი (თვე)</p>
                     <p className="text-[11px] text-gray-400 mt-1">{isEnt ? '15+' : objects} ობიექტი{objects > 1 ? '' : 'ი'}</p>
@@ -206,7 +204,7 @@ export default function Offer() {
           </div>
 
           {/* ── Footer ──────────────────────────────────────────────────────── */}
-          <div className="border-t border-gray-100 px-7 py-4 flex items-center justify-between">
+          <div className="border-t border-gray-100 px-4 sm:px-7 py-4 flex items-center justify-between">
             <span className="text-[11.5px] text-gray-400">* ფასები მოცემულია დღგ-ს გარეშე</span>
             <span className="text-[12px] font-bold text-gray-700">{FINS.website}</span>
           </div>

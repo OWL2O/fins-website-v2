@@ -26,15 +26,30 @@ const CONTACT_INFO = [
 ]
 
 const INITIAL = { name: '', company: '', email: '', phone: '', message: '' }
+const REQUIRED = ['name', 'phone', 'message']
 
 export default function Contact() {
-  const [form, setForm]     = useState(INITIAL)
-  const [status, setStatus] = useState('idle') // idle | loading | success | error
+  const [form, setForm]       = useState(INITIAL)
+  const [status, setStatus]   = useState('idle') // idle | loading | success | error
+  const [touched, setTouched] = useState({})
 
-  const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }))
+  const set = (k) => (e) => {
+    setForm((p) => ({ ...p, [k]: e.target.value }))
+    setTouched((p) => ({ ...p, [k]: true }))
+  }
+  const blur = (k) => () => setTouched((p) => ({ ...p, [k]: true }))
+  const err  = (k) => touched[k] && REQUIRED.includes(k) && !form[k].trim()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    // Mark all required fields as touched so errors show
+    const allTouched = Object.fromEntries(REQUIRED.map(k => [k, true]))
+    setTouched((p) => ({ ...p, ...allTouched }))
+
+    // Validate
+    if (REQUIRED.some(k => !form[k].trim())) return
+
     setStatus('loading')
 
     try {
@@ -140,15 +155,15 @@ export default function Contact() {
             ) : (
               <form onSubmit={handleSubmit} noValidate>
                 <div className="grid sm:grid-cols-2 gap-5">
-                  <Field label="სახელი და გვარი" required>
+                  <Field label="სახელი და გვარი" required error={err('name')}>
                     <Input
                       placeholder="გიორგი მხეიძე"
                       value={form.name}
                       onChange={set('name')}
-                      required
+                      onBlur={blur('name')}
+                      hasError={err('name')}
                     />
                   </Field>
-
 
                   <Field label="კომპანია">
                     <Input
@@ -167,25 +182,31 @@ export default function Contact() {
                     />
                   </Field>
 
-                  <Field label="ტელეფონი" required>
+                  <Field label="ტელეფონი" required error={err('phone')}>
                     <Input
                       type="tel"
                       placeholder="+995 5XX XX XX XX"
                       value={form.phone}
                       onChange={set('phone')}
-                      required
+                      onBlur={blur('phone')}
+                      hasError={err('phone')}
                     />
                   </Field>
 
-                  <Field label="შეტყობინება" required className="sm:col-span-2">
+                  <Field label="შეტყობინება" required error={err('message')} className="sm:col-span-2">
                     <textarea
                       placeholder="მოგვიყევით თქვენი ბიზნესის შესახებ და რა სახის სერვისი გჭირდებათ..."
                       value={form.message}
                       onChange={set('message')}
-                      required
+                      onBlur={blur('message')}
                       rows={5}
-                      className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-4 py-3 text-[14px] font-medium text-white placeholder-white/25 outline-none resize-none transition-colors duration-150 focus:border-brand-500/60 focus:bg-white/[0.06]"
+                      className={`w-full rounded-xl border px-4 py-3 text-[14px] font-medium text-white placeholder-white/25 outline-none resize-none transition-colors duration-150 focus:bg-white/[0.06] ${
+                        err('message')
+                          ? 'border-red-500/60 bg-red-500/[0.04] focus:border-red-500/80'
+                          : 'border-white/[0.10] bg-white/[0.04] focus:border-brand-500/60'
+                      }`}
                     />
+                    {err('message') && <span className="text-[12px] text-red-400 mt-0.5">შეტყობინება სავალდებულოა</span>}
                   </Field>
                 </div>
 
@@ -274,7 +295,7 @@ export default function Contact() {
   )
 }
 
-function Field({ label, required, className = '', children }) {
+function Field({ label, required, error, className = '', children }) {
   return (
     <label className={`flex flex-col gap-1.5 ${className}`}>
       <span className="text-[13px] font-semibold tracking-normal text-white/60">
@@ -282,15 +303,22 @@ function Field({ label, required, className = '', children }) {
         {required && <span className="text-brand-400 ml-0.5">*</span>}
       </span>
       {children}
+      {error && (
+        <span className="text-[12px] text-red-400">{label} სავალდებულოა</span>
+      )}
     </label>
   )
 }
 
-function Input({ className = '', ...props }) {
+function Input({ className = '', hasError, ...props }) {
   return (
     <input
       {...props}
-      className={`w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-4 py-3 text-[14px] font-medium text-white placeholder-white/25 outline-none transition-colors duration-150 focus:border-brand-500/60 focus:bg-white/[0.06] ${className}`}
+      className={`w-full rounded-xl border px-4 py-3 text-[14px] font-medium text-white placeholder-white/25 outline-none transition-colors duration-150 focus:bg-white/[0.06] ${
+        hasError
+          ? 'border-red-500/60 bg-red-500/[0.04] focus:border-red-500/80'
+          : 'border-white/[0.10] bg-white/[0.04] focus:border-brand-500/60'
+      } ${className}`}
     />
   )
 }

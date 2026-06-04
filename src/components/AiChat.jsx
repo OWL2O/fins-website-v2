@@ -28,7 +28,7 @@ function saveBanData(d) { localStorage.setItem(BAN_KEY, JSON.stringify(d)); }
 
 // ── chat history helpers ───────────────────────────────────────────────────────
 const HIST_KEY   = 'fins_chat_history';
-const HIST_MAX   = 10;
+const HIST_MAX   = 5;
 
 function loadHistory() {
   try { const r = localStorage.getItem(HIST_KEY); return r ? JSON.parse(r) : []; } catch { return []; }
@@ -786,7 +786,7 @@ export default function AiChat() {
                       transition={{ duration:0.15, ease:'easeOut' }}
                       style={{
                         position:'fixed',
-                        bottom:'calc(max(24px, env(safe-area-inset-bottom)) + 90px)',
+                        bottom:'calc(max(24px, env(safe-area-inset-bottom)) + 130px)',
                         right:'24px',
                         width:'min(300px, calc(100vw - 48px))',
                         background:'#151b2e',

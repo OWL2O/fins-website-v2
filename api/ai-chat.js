@@ -200,8 +200,8 @@ export default async function handler(req, res) {
       lastStatus = 502;
       continue;
     }
-    if (r.status === 429 || r.status === 404) {
-      // exhausted quota or model not available on this key → try next model
+    if (r.status === 429 || r.status === 404 || r.status === 503 || r.status === 500 || r.status === 529) {
+      // quota / unavailable / overloaded → try next model
       console.warn(`[ai-chat] ${m} → ${r.status}, falling back`);
       lastStatus = r.status;
       continue;

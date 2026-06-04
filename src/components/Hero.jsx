@@ -63,7 +63,11 @@ export default function Hero() {
   // ── Heading driven by current photo ───────────────────────────────────────
   const makeLabel = (idx) => {
     if (isMobileRef.current) {
-      return `${PHOTOS[idx].label} და ${PHOTOS[(idx + 1) % PHOTOS.length].label}`
+      const a = PHOTOS[idx].label
+      const b = PHOTOS[(idx + 1) % PHOTOS.length].label
+      // If first label already contains "და", use comma to avoid "X და Y და Z"
+      const sep = a.includes('და') ? ', ' : ' და '
+      return `${a}${sep}${b}`
     }
     return PHOTOS[idx].label
   }
@@ -104,11 +108,14 @@ export default function Hero() {
       duration: 0.28,
       ease: 'power3.in',
       onComplete: () => {
-        setDisplayLabel(
-          isMobileRef.current
-            ? `${PHOTOS[idx].label} და ${PHOTOS[(idx + 1) % PHOTOS.length].label}`
-            : PHOTOS[idx].label
-        )
+        if (isMobileRef.current) {
+          const a = PHOTOS[idx].label
+          const b = PHOTOS[(idx + 1) % PHOTOS.length].label
+          const sep = a.includes('და') ? ', ' : ' და '
+          setDisplayLabel(`${a}${sep}${b}`)
+        } else {
+          setDisplayLabel(PHOTOS[idx].label)
+        }
       },
     })
   }, [])

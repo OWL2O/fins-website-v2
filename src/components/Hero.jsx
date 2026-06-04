@@ -66,7 +66,7 @@ export default function Hero() {
       const a = PHOTOS[idx].label
       const b = PHOTOS[(idx + 1) % PHOTOS.length].label
       // If first label already contains "და", use comma to avoid "X და Y და Z"
-      const sep = a.includes('და') ? ', ' : ' და '
+      const sep = (a.includes('და') || b.includes('და')) ? ', ' : ' და '
       return `${a}${sep}${b}`
     }
     return PHOTOS[idx].label
@@ -111,7 +111,7 @@ export default function Hero() {
         if (isMobileRef.current) {
           const a = PHOTOS[idx].label
           const b = PHOTOS[(idx + 1) % PHOTOS.length].label
-          const sep = a.includes('და') ? ', ' : ' და '
+          const sep = (a.includes('და') || b.includes('და')) ? ', ' : ' და '
           setDisplayLabel(`${a}${sep}${b}`)
         } else {
           setDisplayLabel(PHOTOS[idx].label)

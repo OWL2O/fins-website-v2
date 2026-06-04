@@ -12,7 +12,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUp, Trash2, X, Sparkles, Ban, Check } from 'lucide-react';
+import { ArrowUp, Trash2, X, Sparkles, Ban, Check, History } from 'lucide-react';
 
 // ── colours ───────────────────────────────────────────────────────────────────
 const AI_BG   = '#1D2748';                           // AI bubble
@@ -25,6 +25,40 @@ function getBanData() {
   return { ip:'', warnings:0, bannedUntil:0 };
 }
 function saveBanData(d) { localStorage.setItem(BAN_KEY, JSON.stringify(d)); }
+
+// ── chat history helpers ───────────────────────────────────────────────────────
+const HIST_KEY   = 'fins_chat_history';
+const HIST_MAX   = 10;
+
+function loadHistory() {
+  try { const r = localStorage.getItem(HIST_KEY); return r ? JSON.parse(r) : []; } catch { return []; }
+}
+
+function saveSession(msgs) {
+  const real = msgs.filter(m => !m.uiOnly && m.text?.trim() && m.role !== 'form');
+  if (real.length < 2) return; // skip trivial sessions
+  const firstUser = real.find(m => m.role === 'user');
+  const session = {
+    id: Date.now(),
+    savedAt: new Date().toISOString(),
+    preview: firstUser ? firstUser.text.slice(0, 72) : '—',
+    messages: real,
+  };
+  const prev = loadHistory().filter(s => s.id !== session.id);
+  localStorage.setItem(HIST_KEY, JSON.stringify([session, ...prev].slice(0, HIST_MAX)));
+}
+
+function formatHistDate(iso) {
+  const d = new Date(iso);
+  const now = new Date();
+  const diffMs = now - d;
+  const diffH  = Math.floor(diffMs / 3_600_000);
+  const diffD  = Math.floor(diffMs / 86_400_000);
+  if (diffH < 1)  return 'ახლახანს';
+  if (diffH < 24) return `${diffH} სთ წინ`;
+  if (diffD < 7)  return `${diffD} დღე წინ`;
+  return d.toLocaleDateString('ka-GE', { day:'numeric', month:'short' });
+}
 
 // ── text helpers ──────────────────────────────────────────────────────────────
 function stripSignals(t) {
@@ -333,10 +367,13 @@ export default function AiChat() {
   const [navOpen,      setNavOpen]      = useState(false);
   const [formValues,   setFormValues]   = useState({ name:'', phone:'', email:'' });
   const [formSending,  setFormSending]  = useState(false);
+  const [showHistory,  setShowHistory]  = useState(false);
+  const [history,      setHistory]      = useState(() => loadHistory());
 
   const inputRef    = useRef(null);
   const bottomRef   = useRef(null);
   const msgAreaRef  = useRef(null);
+  const histMenuRef = useRef(null);
 
   // ── hide widget when mobile nav is open ──────────────────────────────────
   useEffect(() => {
@@ -344,6 +381,16 @@ export default function AiChat() {
     window.addEventListener('navmenu', handler);
     return () => window.removeEventListener('navmenu', handler);
   }, []);
+
+  // ── close history menu on outside click ───────────────────────────────────
+  useEffect(() => {
+    if (!showHistory) return;
+    const handler = (e) => {
+      if (histMenuRef.current && !histMenuRef.current.contains(e.target)) setShowHistory(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showHistory]);
 
   // ── ban init ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -649,14 +696,18 @@ export default function AiChat() {
                   </div>
                 ) : (
                   /* normal input pill */
-                  <div style={{
-                    display:'flex', alignItems:'center', gap:6,
-                    background:'#ffffff',
-                    borderRadius:999,
-                    padding:'7px 7px 7px 16px',
-                    width:'min(288px, calc(100vw - 82px))',
-                    boxShadow:'0 8px 32px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.10)',
-                  }}>
+                  <div
+                    onContextMenu={e => { e.preventDefault(); setShowHistory(h => !h); }}
+                    style={{
+                      display:'flex', alignItems:'center', gap:6,
+                      background:'#ffffff',
+                      borderRadius:999,
+                      padding:'7px 7px 7px 16px',
+                      width:'min(288px, calc(100vw - 82px))',
+                      boxShadow:'0 8px 32px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.10)',
+                      position:'relative',
+                    }}
+                  >
                     <input
                       ref={inputRef}
                       type="text"
@@ -700,7 +751,7 @@ export default function AiChat() {
                       ) : (
                         <motion.button
                           key="clear"
-                          onClick={() => setMessages([])}
+                          onClick={() => { saveSession(messages); setHistory(loadHistory()); setMessages([]); }}
                           disabled={messages.length === 0}
                           initial={{ scale:0.6, opacity:0, rotate: 20 }}
                           animate={{ scale:1,   opacity:1, rotate:0   }}
@@ -723,6 +774,69 @@ export default function AiChat() {
                     </AnimatePresence>
                   </div>
                 )}
+
+                {/* ── History context menu ── */}
+                <AnimatePresence>
+                  {showHistory && (
+                    <motion.div
+                      ref={histMenuRef}
+                      initial={{ opacity:0, y:8, scale:0.96 }}
+                      animate={{ opacity:1, y:0,  scale:1   }}
+                      exit={{    opacity:0, y:6,  scale:0.96 }}
+                      transition={{ duration:0.15, ease:'easeOut' }}
+                      style={{
+                        position:'fixed',
+                        bottom:'calc(max(24px, env(safe-area-inset-bottom)) + 90px)',
+                        right:'24px',
+                        width:'min(300px, calc(100vw - 48px))',
+                        background:'#151b2e',
+                        borderRadius:16,
+                        border:'1px solid rgba(255,255,255,0.09)',
+                        boxShadow:'0 16px 48px rgba(0,0,0,0.55)',
+                        overflow:'hidden',
+                        zIndex:10001,
+                      }}
+                    >
+                      {/* header */}
+                      <div style={{ display:'flex', alignItems:'center', gap:8, padding:'12px 14px 10px', borderBottom:'1px solid rgba(255,255,255,0.07)' }}>
+                        <History size={13} style={{ color:'rgba(255,255,255,0.35)', flexShrink:0 }} />
+                        <span style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.45)', letterSpacing:'0.06em', textTransform:'uppercase' }}>
+                          წინა ჩატები
+                        </span>
+                      </div>
+
+                      {history.length === 0 ? (
+                        <div style={{ padding:'20px 14px', fontSize:13, color:'rgba(255,255,255,0.28)', textAlign:'center' }}>
+                          ჯერ არაფერია შენახული
+                        </div>
+                      ) : (
+                        <div style={{ maxHeight:300, overflowY:'auto', padding:'4px 0' }}>
+                          {history.map((s, i) => (
+                            <button
+                              key={s.id}
+                              onClick={() => { setMessages(s.messages); setShowHistory(false); }}
+                              style={{
+                                width:'100%', textAlign:'left', background:'none', border:'none',
+                                cursor:'pointer', padding:'10px 14px',
+                                display:'flex', flexDirection:'column', gap:3,
+                                borderBottom: i < history.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                              }}
+                              onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.05)'}
+                              onMouseLeave={e => e.currentTarget.style.background='none'}
+                            >
+                              <span style={{ fontSize:11, color:'rgba(255,255,255,0.30)', fontWeight:500 }}>
+                                {formatHistDate(s.savedAt)}
+                              </span>
+                              <span style={{ fontSize:13, color:'rgba(255,255,255,0.75)', fontWeight:500, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                                {s.preview}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             )}
           </AnimatePresence>
@@ -733,7 +847,10 @@ export default function AiChat() {
             animate={{ scale:1, opacity:1 }}
             whileHover={{ scale:1.07 }}
             whileTap={{ scale:0.90 }}
-            onClick={() => { setOpen(o => !o); }}
+            onClick={() => {
+              if (open && messages.length > 0) { saveSession(messages); setHistory(loadHistory()); }
+              setOpen(o => !o);
+            }}
             aria-label="AI ასისტენტი"
             style={fabStyle(isBanned, open)}
           >

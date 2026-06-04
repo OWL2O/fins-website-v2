@@ -361,6 +361,14 @@ function FabInner({ open, isBanned }) {
 }
 
 export default function AiChat() {
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width:639px)').matches);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width:639px)');
+    const cb = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', cb);
+    return () => mq.removeEventListener('change', cb);
+  }, []);
+
   const [open,            setOpen]            = useState(false);
   const [messages,        setMessages]        = useState([]);
   const [input,           setInput]           = useState('');
@@ -888,8 +896,17 @@ export default function AiChat() {
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════
-          FLOATING BUBBLES — no wrapper background, just the bubbles themselves
+          MESSAGES — floating bubbles on desktop, full-panel on mobile
       ═══════════════════════════════════════════════════════════════════ */}
+
+      {/* Mobile full-screen backdrop */}
+      {isMobile && open && (
+        <div style={{
+          position:'fixed', inset:0, zIndex:9998,
+          background:'rgba(10,14,26,0.97)',
+        }} />
+      )}
+
       <AnimatePresence>
         {open && messages.length > 0 && (
           <motion.div
@@ -899,11 +916,13 @@ export default function AiChat() {
             transition={{ duration:0.2 }}
             style={{
               position:'fixed', zIndex:9999,
-              right:'24px',
-              top:'80px',      // just below the navbar — container spans the whole right column
-              bottom:'154px',  // just above the input bar
-              width:'min(340px, calc(100vw - 48px))',
-              // scrollable — wheel events intercepted by the useEffect above
+              // Desktop: right-anchored bubble column
+              // Mobile: full-screen chat panel
+              right: isMobile ? '0' : '24px',
+              left:  isMobile ? '0' : 'auto',
+              top:   isMobile ? '0'  : '80px',
+              bottom: isMobile ? '72px' : '154px',
+              width: isMobile ? '100%' : 'min(340px, calc(100vw - 48px))',
               overflowY:'auto',
               overflowX:'hidden',
               scrollbarWidth:'none',
@@ -911,11 +930,37 @@ export default function AiChat() {
               display:'flex', flexDirection:'column',
               justifyContent:'flex-start',
               gap:'8px',
-              padding:'8px 0',
+              padding: isMobile ? '72px 16px 8px' : '8px 0',
               WebkitOverflowScrolling:'touch',
               pointerEvents:'auto',
             }}
           >
+            {/* Mobile header — pinned inside the scroll area with sticky positioning */}
+            {isMobile && (
+              <div style={{
+                position:'sticky', top:'-72px', zIndex:2,
+                display:'flex', alignItems:'center', justifyContent:'space-between',
+                padding:'14px 4px 10px',
+                marginTop:'-72px', marginBottom:4,
+              }}>
+                <span style={{ fontSize:13, fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase', color:'rgba(255,255,255,0.35)' }}>
+                  FINS AI
+                </span>
+                <motion.button
+                  onClick={() => setOpen(false)}
+                  whileTap={{ scale:0.9 }}
+                  style={{
+                    width:28, height:28, borderRadius:'50%',
+                    border:'none', background:'rgba(255,255,255,0.09)',
+                    cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
+                    color:'rgba(255,255,255,0.55)',
+                  }}
+                >
+                  <X size={14} />
+                </motion.button>
+              </div>
+            )}
+
             {/* spacer pushes messages to the bottom; scroll still works upward */}
             <div style={{ flex: '1 1 auto' }} />
             {messages.map((msg, i) => (
@@ -1019,14 +1064,30 @@ export default function AiChat() {
       </AnimatePresence>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          BOTTOM CONTROLS  — input pill stacked above FAB, right-anchored
+          BOTTOM CONTROLS
       ═══════════════════════════════════════════════════════════════════ */}
       <div style={{
         position:'fixed', zIndex:10000,
-        right:'24px',
-        bottom:'max(24px, env(safe-area-inset-bottom))',
+        // Mobile + open: full-width bar at very bottom
+        // Otherwise: right-anchored FAB area
+        ...(isMobile && open ? {
+          left: 0, right: 0, bottom: 0,
+          padding: '10px 16px max(14px, env(safe-area-inset-bottom))',
+          background: 'rgba(10,14,26,0.97)',
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          display: 'flex', alignItems: 'center', gap: 10,
+        } : {
+          right: '24px',
+          bottom: 'max(24px, env(safe-area-inset-bottom))',
+        }),
       }}>
-        <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:'10px' }}>
+        <div style={{
+          display:'flex',
+          flexDirection: isMobile && open ? 'row' : 'column',
+          alignItems:'flex-end',
+          gap:'10px',
+          width: isMobile && open ? '100%' : 'auto',
+        }}>
 
           {/* ── Input pill ── */}
           <AnimatePresence>
@@ -1058,7 +1119,8 @@ export default function AiChat() {
                       background:'#ffffff',
                       borderRadius:999,
                       padding:'7px 7px 7px 16px',
-                      width:'min(288px, calc(100vw - 82px))',
+                      width: isMobile && open ? 'auto' : 'min(288px, calc(100vw - 82px))',
+                      flex: isMobile && open ? '1' : 'none',
                       boxShadow:'0 8px 32px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.10)',
                       position:'relative',
                     }}
@@ -1266,6 +1328,7 @@ export default function AiChat() {
             onSubmit={() => submitBookingFlow(bookingFlow.data)}
             submitting={bookingSubmitting}
             submitted={bookingSubmitted}
+            isMobile={isMobile}
           />
         )}
       </AnimatePresence>

@@ -68,7 +68,7 @@ function OverlayField({ label, value, active, optional }) {
   );
 }
 
-export default function BookingFormOverlay({ flow, onClose, onSubmit, submitting, submitted }) {
+export default function BookingFormOverlay({ flow, onClose, onSubmit, submitting, submitted, isMobile }) {
   if (!flow) return null;
 
   const { data, step } = flow;
@@ -77,16 +77,36 @@ export default function BookingFormOverlay({ flow, onClose, onSubmit, submitting
   const canSubmit = !!(data.name && data.contactValue) && step === 'done' && !submitted && !submitting;
 
   return (
+    <>
+      {/* Mobile backdrop */}
+      {isMobile && (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          style={{ position:'fixed', inset:0, zIndex:9991, background:'rgba(0,0,0,0.45)' }}
+          onClick={onClose}
+        />
+      )}
     <motion.div
       key="booking-overlay"
-      initial={{ opacity: 0, scale: 0.84, y: 32 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.90, y: 16 }}
-      transition={{ type: 'spring', stiffness: 360, damping: 28, mass: 0.7 }}
-      style={{
+      initial={isMobile ? { y: '100%' } : { opacity: 0, scale: 0.84, y: 32 }}
+      animate={isMobile ? { y: 0 }      : { opacity: 1, scale: 1, y: 0 }}
+      exit={isMobile   ? { y: '100%' }  : { opacity: 0, scale: 0.90, y: 16 }}
+      transition={isMobile
+        ? { type: 'spring', stiffness: 320, damping: 32 }
+        : { type: 'spring', stiffness: 360, damping: 28, mass: 0.7 }}
+      style={isMobile ? {
         position: 'fixed',
-        left: '50%',
-        top: '50%',
+        bottom: 0, left: 0, right: 0, top: 'auto',
+        zIndex: 9992,
+        background: '#ffffff',
+        borderRadius: '20px 20px 0 0',
+        padding: '8px 20px max(24px,env(safe-area-inset-bottom))',
+        boxShadow: '0 -8px 40px rgba(0,0,0,0.25)',
+        maxHeight: '82vh', overflowY: 'auto',
+        pointerEvents: 'auto',
+      } : {
+        position: 'fixed',
+        left: '50%', top: '50%',
         transform: 'translate(-50%, -50%)',
         zIndex: 9992,
         width: 'min(400px, calc(100vw - 48px))',
@@ -97,6 +117,10 @@ export default function BookingFormOverlay({ flow, onClose, onSubmit, submitting
         pointerEvents: 'auto',
       }}
     >
+      {/* Drag handle on mobile */}
+      {isMobile && (
+        <div style={{ width:36, height:4, borderRadius:2, background:'rgba(0,0,0,0.15)', margin:'0 auto 18px' }} />
+      )}
       {/* Close */}
       <motion.button
         onClick={onClose}
@@ -192,5 +216,6 @@ export default function BookingFormOverlay({ flow, onClose, onSubmit, submitting
         </AnimatePresence>
       </div>
     </motion.div>
+    </>
   );
 }

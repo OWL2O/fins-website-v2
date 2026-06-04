@@ -588,14 +588,10 @@ export default function AiChat() {
   function finishBookingFlow(finalData) {
     setBookingFlow({ step:'done', data:finalData });
     setTimeout(() => {
-      if (isMobile) {
-        setMessages(prev => [...prev,
-          { role:'model', text:'ყველაფერი ჩაიწერა.' },
-          { role:'send_btn', data: finalData, submitted: false },
-        ]);
-      } else {
-        setMessages(prev => [...prev, { role:'model', text:'ყველაფერი ჩაიწერა — ფორმაზე დააჭირე გასაგზავნად.' }]);
-      }
+      setMessages(prev => [...prev,
+        { role:'model', text:'ყველაფერი ჩაიწერა.' },
+        { role:'send_btn', data: finalData, submitted: false },
+      ]);
     }, 420);
   }
 
@@ -1325,11 +1321,7 @@ export default function AiChat() {
           <BookingFormOverlay
             flow={bookingFlow}
             onClose={() => { setBookingFlow(null); setBookingSubmitted(false); }}
-            onSubmit={() => submitBookingFlow(bookingFlow.data)}
-            submitting={bookingSubmitting}
-            submitted={bookingSubmitted}
             isMobile={isMobile}
-            onEdit={(field, val) => setBookingFlow(prev => prev ? { ...prev, data: { ...prev.data, [field]: val } } : prev)}
           />
         )}
       </AnimatePresence>

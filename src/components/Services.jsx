@@ -149,11 +149,11 @@ export default function Services() {
                   <img
                     src={it.iconSrc}
                     alt=""
-                    className="h-11 w-11 shrink-0 select-none"
+                    className="hidden md:block h-11 w-11 shrink-0 select-none"
                     draggable={false}
                   />
                 ) : (
-                  <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-600/10 text-brand-600">
+                  <span className="hidden md:inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-600/10 text-brand-600">
                     <it.icon size={20} strokeWidth={1.8} />
                   </span>
                 )}

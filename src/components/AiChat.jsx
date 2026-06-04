@@ -876,7 +876,24 @@ export default function AiChat() {
     } finally { setBusy(false); }
   }
 
-  function handleKey(e) { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); send(); } }
+  function handleKey(e) {
+    if (e.key !== 'Enter' || e.shiftKey) return;
+    e.preventDefault();
+
+    if (!input.trim()) {
+      // Enter on empty input → check for send_btn or choice buttons
+      const sendBtnMsg = [...messages].reverse().find(m => m.role === 'send_btn' && !m.submitted);
+      if (sendBtnMsg) { submitBookingFlow(sendBtnMsg.data); return; }
+
+      let choiceIdx = -1;
+      for (let i = messages.length - 1; i >= 0; i--) {
+        if (messages[i].role === 'choice' && !messages[i].handled) { choiceIdx = i; break; }
+      }
+      if (choiceIdx !== -1) { handleChoiceSelect(messages[choiceIdx].options[0], choiceIdx); return; }
+    }
+
+    send();
+  }
   const hasText = !!input.trim();
 
   // ── render ────────────────────────────────────────────────────────────────

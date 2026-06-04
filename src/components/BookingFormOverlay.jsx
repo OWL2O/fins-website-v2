@@ -2,48 +2,76 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 
-// ── Typewriter text with blinking cursor ──────────────────────────────────
-function TypewriterText({ text, speed = 38 }) {
-  const [displayed, setDisplayed] = useState('');
-  const timerRef = useRef(null);
+// ── TypewriterInput ───────────────────────────────────────────────────────
+// Plays typewriter animation on first appearance, then becomes an editable input
+function TypewriterInput({ value, onChange, speed = 38 }) {
+  const [displayed, setDisplayed]   = useState('');
+  const [settled,   setSettled]     = useState(false);
+  const timerRef                    = useRef(null);
+  const isFirstRef                  = useRef(true);
 
   useEffect(() => {
+    // After the initial typewriter, if the user edits via the input
+    // onChange fires → value prop updates → but we don't re-run the animation
+    if (!isFirstRef.current && settled) return;
+    isFirstRef.current = false;
+
     clearInterval(timerRef.current);
-    if (!text) { setDisplayed(''); return; }
+    setSettled(false);
     setDisplayed('');
     let i = 0;
     timerRef.current = setInterval(() => {
       i++;
-      setDisplayed(text.slice(0, i));
-      if (i >= text.length) clearInterval(timerRef.current);
+      setDisplayed(value.slice(0, i));
+      if (i >= value.length) {
+        clearInterval(timerRef.current);
+        setSettled(true);
+      }
     }, speed);
     return () => clearInterval(timerRef.current);
-  }, [text, speed]);
+  }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const done = displayed.length >= (text?.length ?? 0);
-  return (
-    <span>
-      {displayed}
-      {!done && (
+  const inputStyle = {
+    fontSize: 15, fontWeight: 600, color: '#ffffff',
+    background: 'transparent', border: 'none', outline: 'none',
+    width: '100%', fontFamily: 'inherit', padding: 0,
+    lineHeight: 1.45, cursor: 'text',
+  };
+
+  if (!settled) {
+    // Typewriter in progress — display-only span with blinking cursor
+    return (
+      <span style={{ fontSize: 15, fontWeight: 600, color: '#ffffff', lineHeight: 1.45 }}>
+        {displayed}
         <motion.span
           animate={{ opacity: [1, 0] }}
           transition={{ duration: 0.45, repeat: Infinity, repeatType: 'reverse' }}
           style={{
-            display: 'inline-block', width: 1.5, height: '0.95em',
-            background: 'currentColor', marginLeft: 2,
+            display: 'inline-block', width: 1.5, height: '0.9em',
+            background: '#ffffff', marginLeft: 2,
             verticalAlign: 'text-bottom', borderRadius: 1,
           }}
         />
-      )}
-    </span>
+      </span>
+    );
+  }
+
+  // Settled — editable input, identical visual appearance
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={e => onChange?.(e.target.value)}
+      style={inputStyle}
+    />
   );
 }
 
-// ── A single field row — slides down when data arrives ────────────────────
-function FieldRow({ label, value }) {
+// ── FieldRow — reveals with spring, shows editable TypewriterInput ─────────
+function FieldRow({ label, value, onChange }) {
   return (
     <motion.div
-      initial={{ height: 0, opacity: 0, y: -6 }}
+      initial={{ height: 0, opacity: 0, y: -4 }}
       animate={{ height: 'auto', opacity: 1, y: 0 }}
       exit={{ height: 0, opacity: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
@@ -51,7 +79,7 @@ function FieldRow({ label, value }) {
     >
       <div style={{
         borderTop: '1px solid rgba(255,255,255,0.08)',
-        paddingTop: 12, paddingBottom: 6, marginTop: 4,
+        paddingTop: 11, paddingBottom: 6, marginTop: 4,
       }}>
         <p style={{
           fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
@@ -60,12 +88,7 @@ function FieldRow({ label, value }) {
         }}>
           {label}
         </p>
-        <p style={{
-          fontSize: 15, fontWeight: 600, color: '#ffffff',
-          margin: 0, lineHeight: 1.45,
-        }}>
-          <TypewriterText text={value} />
-        </p>
+        <TypewriterInput value={value} onChange={onChange} />
       </div>
     </motion.div>
   );
@@ -104,18 +127,26 @@ function OverlayHeader({ onClose }) {
   );
 }
 
-// ── Field list (used by both desktop and mobile) ──────────────────────────
-function FieldList({ data, contactLabel }) {
+// ── Field list ────────────────────────────────────────────────────────────
+function FieldList({ data, contactLabel, onEdit }) {
   return (
     <AnimatePresence>
-      {data.name      && <FieldRow key="name"    label="სახელი / კომპანია"       value={data.name} />}
-      {data.contactValue && <FieldRow key="contact" label={contactLabel || 'კონტაქტი'} value={data.contactValue} />}
-      {data.comment   && <FieldRow key="comment" label="კომენტარი"               value={data.comment} />}
+      {data.name && (
+        <FieldRow key="name" label="სახელი / კომპანია" value={data.name}
+          onChange={v => onEdit?.('name', v)} />
+      )}
+      {data.contactValue && (
+        <FieldRow key="contact" label={contactLabel || 'კონტაქტი'} value={data.contactValue}
+          onChange={v => onEdit?.('contactValue', v)} />
+      )}
+      {data.comment && (
+        <FieldRow key="comment" label="კომენტარი" value={data.comment}
+          onChange={v => onEdit?.('comment', v)} />
+      )}
     </AnimatePresence>
   );
 }
 
-// ── DARK CARD STYLES ──────────────────────────────────────────────────────
 const CARD_STYLE = {
   background: 'rgba(12, 16, 30, 0.96)',
   backdropFilter: 'blur(24px)',
@@ -124,13 +155,13 @@ const CARD_STYLE = {
   boxShadow: '0 28px 64px rgba(0,0,0,0.55), 0 4px 16px rgba(0,0,0,0.30)',
 };
 
-// ── Main export ───────────────────────────────────────────────────────────
-export default function BookingFormOverlay({ flow, onClose, isMobile }) {
+// ── Main ─────────────────────────────────────────────────────────────────
+export default function BookingFormOverlay({ flow, onClose, isMobile, onEdit }) {
   if (!flow) return null;
   const { data } = flow;
   const contactLabel = data.contactType === 'email' ? 'ელ-ფოსტა' : 'ტელეფონი';
 
-  // ── MOBILE: bottom sheet (dark) ─────────────────────────────────────────
+  // ── Mobile: dark bottom sheet ──────────────────────────────────────────
   if (isMobile) {
     return (
       <>
@@ -140,9 +171,7 @@ export default function BookingFormOverlay({ flow, onClose, isMobile }) {
           onClick={onClose}
         />
         <motion.div
-          initial={{ y: '100%' }}
-          animate={{ y: 0 }}
-          exit={{ y: '100%' }}
+          initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
           transition={{ type: 'spring', stiffness: 320, damping: 32 }}
           style={{
             ...CARD_STYLE,
@@ -155,27 +184,17 @@ export default function BookingFormOverlay({ flow, onClose, isMobile }) {
             pointerEvents: 'auto',
           }}
         >
-          {/* Drag handle */}
-          <div style={{
-            width: 36, height: 4, borderRadius: 2,
-            background: 'rgba(255,255,255,0.12)', margin: '0 auto 18px',
-          }} />
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.12)', margin: '0 auto 18px' }} />
           <OverlayHeader onClose={onClose} />
-          <FieldList data={data} contactLabel={contactLabel} />
+          <FieldList data={data} contactLabel={contactLabel} onEdit={onEdit} />
         </motion.div>
       </>
     );
   }
 
-  // ── DESKTOP: slides in from right, centers on screen ───────────────────
+  // ── Desktop: slides in from right ──────────────────────────────────────
   return (
-    <div style={{
-      position: 'fixed',
-      left: '50%',
-      top: '88px',
-      zIndex: 9992,
-      pointerEvents: 'none',
-    }}>
+    <div style={{ position: 'fixed', left: '50%', top: '88px', zIndex: 9992, pointerEvents: 'none' }}>
       <motion.div
         initial={{ x: 1400, opacity: 0 }}
         animate={{ x: '-50%', opacity: 1 }}
@@ -190,7 +209,7 @@ export default function BookingFormOverlay({ flow, onClose, isMobile }) {
         }}
       >
         <OverlayHeader onClose={onClose} />
-        <FieldList data={data} contactLabel={contactLabel} />
+        <FieldList data={data} contactLabel={contactLabel} onEdit={onEdit} />
       </motion.div>
     </div>
   );

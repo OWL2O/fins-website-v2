@@ -1322,6 +1322,7 @@ export default function AiChat() {
             flow={bookingFlow}
             onClose={() => { setBookingFlow(null); setBookingSubmitted(false); }}
             isMobile={isMobile}
+            onEdit={(field, val) => setBookingFlow(prev => prev ? { ...prev, data: { ...prev.data, [field]: val } } : prev)}
           />
         )}
       </AnimatePresence>

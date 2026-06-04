@@ -654,6 +654,36 @@ export default function AiChat() {
     return t; // no pattern matched — use as-is
   }
 
+  // ── Contact validation helpers ────────────────────────────────────────────
+  function isValidPhone(val) {
+    const d = val.replace(/\D/g, '');
+    return d.length === 9 || d.length === 12;
+  }
+  function isValidEmail(val) {
+    return val.includes('@');
+  }
+
+  function advanceAfterContact(text, data) {
+    const newData = { ...data, contactValue: text, pendingValue: undefined };
+    setBookingFlow({ step:'comment_decision', data: newData });
+    setTimeout(() => {
+      setMessages(prev => [...prev,
+        { role:'model', text:'მშვენიერია! გინდა კომენტარი დაუმატო?' },
+        { role:'choice', options:['კი, დავამატებ', 'არა, ასე გაგზავნე'], handled:false },
+      ]);
+    }, 420);
+  }
+
+  function askContactConfirm(text, confirmStep, data) {
+    setBookingFlow({ step: confirmStep, data: { ...data, pendingValue: text } });
+    setTimeout(() => {
+      setMessages(prev => [...prev,
+        { role:'model', text:'დარწმუნებული ხარ, რომ სწორია? თავიდან ხომ არ ცდი?' },
+        { role:'choice', options:['თავიდან ცდა', 'არსებულის გამოყენება'], handled:false },
+      ]);
+    }, 420);
+  }
+
   function handleBookingStep(text) {
     const { step, data } = bookingFlow;
     switch (step) {
@@ -669,16 +699,27 @@ export default function AiChat() {
         }, 420);
         break;
       }
-      case 'awaiting_phone':
+      case 'awaiting_phone': {
+        if (!isValidPhone(text)) { askContactConfirm(text, 'confirming_phone', data); break; }
+        advanceAfterContact(text, data);
+        break;
+      }
       case 'awaiting_email': {
-        const newData = { ...data, contactValue: text };
-        setBookingFlow({ step:'comment_decision', data: newData });
-        setTimeout(() => {
-          setMessages(prev => [...prev,
-            { role:'model', text:'მშვენიერია! გინდა კომენტარი დაუმატო?' },
-            { role:'choice', options:['კი, დავამატებ', 'არა, ასე გაგზავნე'], handled:false },
-          ]);
-        }, 420);
+        if (!isValidEmail(text)) { askContactConfirm(text, 'confirming_email', data); break; }
+        advanceAfterContact(text, data);
+        break;
+      }
+      case 'confirming_phone': {
+        // User typed a new number while confirmation is shown
+        setMessages(prev => prev.map(m => m.role === 'choice' && !m.handled ? { ...m, handled:true, selected:'თავიდან ცდა' } : m));
+        if (!isValidPhone(text)) { askContactConfirm(text, 'confirming_phone', data); break; }
+        advanceAfterContact(text, { ...data, pendingValue: undefined });
+        break;
+      }
+      case 'confirming_email': {
+        setMessages(prev => prev.map(m => m.role === 'choice' && !m.handled ? { ...m, handled:true, selected:'თავიდან ცდა' } : m));
+        if (!isValidEmail(text)) { askContactConfirm(text, 'confirming_email', data); break; }
+        advanceAfterContact(text, { ...data, pendingValue: undefined });
         break;
       }
       case 'awaiting_comment': {
@@ -702,7 +743,15 @@ export default function AiChat() {
         setBookingFlow({ step:'awaiting_email', data:{ ...data, contactType:'email' } });
         setTimeout(() => setMessages(prev => [...prev, { role:'model', text:'კარგი, ელ-ფოსტა?' }]), 420);
       }
-    } else if (step === 'comment_decision') {
+    } else if (step === 'confirming_phone' || step === 'confirming_email') {
+    const isPhone = step === 'confirming_phone';
+    if (choice === 'თავიდან ცდა') {
+      setBookingFlow({ step: isPhone ? 'awaiting_phone' : 'awaiting_email', data: { ...data, pendingValue: undefined } });
+      setTimeout(() => setMessages(prev => [...prev, { role:'model', text: isPhone ? 'კარგი, ნომერი?' : 'კარგი, ელ-ფოსტა?' }]), 420);
+    } else {
+      advanceAfterContact(data.pendingValue ?? '', data);
+    }
+  } else if (step === 'comment_decision') {
       if (choice === 'კი, დავამატებ') {
         setBookingFlow({ step:'awaiting_comment', data });
         setTimeout(() => setMessages(prev => [...prev, { role:'model', text:'დაწერე:' }]), 420);

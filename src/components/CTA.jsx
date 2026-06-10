@@ -1,11 +1,10 @@
 import { useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { ArrowRight } from 'lucide-react'
 import PricingCalculator from './PricingCalculator.jsx'
 
 gsap.registerPlugin(ScrollTrigger)
-
 
 export default function CTA() {
   const sectionRef = useRef(null)
@@ -31,37 +30,20 @@ export default function CTA() {
         }, i * 0.1)
       })
 
-      // Package card — own viewport trigger
-      gsap.set('[data-cta-card]', { y: 40, opacity: 0 })
+      // Pricing card — own viewport trigger
+      gsap.set('[data-cta-card]', { y: 48, opacity: 0, scale: 0.98 })
       gsap.to('[data-cta-card]', {
         y: 0,
         opacity: 1,
+        scale: 1,
         duration: 1,
         ease: 'power2.inOut',
         scrollTrigger: {
           trigger: '[data-cta-card]',
-          start: 'top 90%',
-          end: 'top 60%',
+          start: 'top 92%',
+          end: 'top 62%',
           scrub: 1,
         },
-      })
-
-      // Buttons — scale animation
-      const btnEls = gsap.utils.toArray('[data-scroll-btn]')
-      gsap.set(btnEls, { scale: 0.9, opacity: 0 })
-      btnEls.forEach((el) => {
-        gsap.to(el, {
-          scale: 1,
-          opacity: 1,
-          duration: 1,
-          ease: 'power2.inOut',
-          scrollTrigger: {
-            trigger: el,
-            start: 'top 87%',
-            end: 'top 60%',
-            scrub: 1,
-          },
-        })
       })
     }, sectionRef)
 
@@ -72,36 +54,49 @@ export default function CTA() {
     <section
       ref={sectionRef}
       id="pricing"
-      className="relative flex items-center justify-center text-white min-h-[800px] lg:min-h-[1080px] w-full py-20 lg:py-28 lg:pt-14"
+      className="relative isolate overflow-hidden w-full py-20 sm:py-24 lg:py-32 bg-white"
     >
+      {/* Figma light gradient — lavender corners, soft green center glow */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{
+          background: [
+            'radial-gradient(44% 42% at 0% 8%, rgba(96,108,255,0.10), transparent 70%)',
+            'radial-gradient(42% 44% at 100% 14%, rgba(61,100,254,0.09), transparent 70%)',
+            'radial-gradient(46% 40% at 50% 100%, rgba(110,190,150,0.09), transparent 72%)',
+          ].join(', '),
+        }}
+      />
 
-      {/* Centered content */}
-      <div data-cta-content className="relative z-10 mx-auto px-5 sm:px-8 lg:px-12 flex flex-col items-center justify-center text-center gap-9 max-w-[1200px]">
+      <div data-cta-content className="relative z-10 mx-auto px-5 sm:px-8 lg:px-12 flex flex-col items-center justify-center text-center max-w-[1200px]">
         <h2
           data-cta-enter
-          className="font-banner text-white text-center text-[24px] sm:text-[44px] md:text-[35px] lg:text-[35px] min-[1700px]:text-[64px] leading-[1.2] tracking-normal"
+          className="font-banner uppercase text-[#3E4259] text-center tracking-normal leading-[1.25] text-[26px] sm:text-[36px] lg:text-[46px] min-[1700px]:text-[54px] max-w-[1000px]"
         >
           მზად ხართ ბიზნესის ციფრული ტრანსფორმაციისთვის?
         </h2>
 
         <p
           data-cta-enter
-          className="text-white text-center text-[15px] sm:text-[18px] lg:text-[16px] min-[1700px]:text-[22px] leading-[1.55] tracking-normal font-medium max-w-[860px]"
+          className="mt-6 text-[#3E4259]/75 text-center text-[14px] sm:text-[16px] lg:text-[17px] leading-[1.65] tracking-normal font-medium max-w-[680px]"
         >
-          დაიწყე ბუღალტერიის და საოპერაციო მოდულების მართვა თვეში 60 ლარიდან. რეგისტრაცია მხოლოდ 2 წუთში.
+          დაიწყე ბუღალტერიის და საოპერაციო მოდულების მართვა თვეში 60 ლარიდან.
+          რეგისტრაცია მხოლოდ 2 წუთში.
         </p>
 
-        <a
-          data-scroll-btn
-          href="/contact"
-          className="inline-flex items-center justify-center w-[203px] h-[42px] min-[1700px]:h-[52px] rounded-full text-[14px] font-medium leading-none tracking-normal text-white/60 border border-white/30 hover:text-white hover:border-white/60 bg-transparent transition-[background-color,border-color,color,box-shadow] duration-250"
+        <Link
+          data-cta-enter
+          to="/contact"
+          className="mt-9 inline-flex items-center justify-center h-[46px] px-8 rounded-full text-[14px] font-semibold leading-none tracking-normal text-[#3D64FE] bg-white border border-[#3D64FE]/35 hover:border-[#3D64FE]/70 hover:bg-[#3D64FE]/[0.04] hover:-translate-y-px transition-all duration-300 ease-out shadow-[0_4px_18px_rgba(61,100,254,0.08)]"
         >
           ჩანიშნე შეხვედრა
-        </a>
+        </Link>
 
+        {/* Split calculator card */}
         <div
           data-cta-card
-          className="w-full max-w-[431px] rounded-[20px] px-7 py-8 border border-white/[0.18] bg-white/[0.03]"
+          className="mt-12 w-full max-w-[860px] rounded-[20px] bg-white border border-[#3E4259]/[0.08] shadow-[0_30px_90px_rgba(40,55,120,0.12),0_6px_24px_rgba(40,55,120,0.06)] overflow-hidden"
         >
           <PricingCalculator />
         </div>

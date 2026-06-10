@@ -91,9 +91,16 @@ export default function Accounting() {
 
         {/* Left column */}
         <div data-acc-left>
+          <p
+            data-acc-enter
+            className="text-[16px] font-semibold leading-none tracking-normal text-brand-600 mb-5"
+          >
+            ბუღალტერია
+          </p>
+
           <h2
             data-acc-enter
-            className="font-banner uppercase tracking-normal text-left text-[28px] sm:text-[38px] md:text-[44px] lg:text-[48px] text-ink-950 leading-[1.15]"
+            className="font-banner uppercase tracking-normal text-left text-[28px] sm:text-[36px] md:text-[40px] lg:text-[42px] text-[#3E4259] leading-[1.2]"
           >
             ბუღალტრული პროგრამული
             <br />

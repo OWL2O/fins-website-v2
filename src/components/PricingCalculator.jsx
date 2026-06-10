@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { ArrowRight, TrendingDown, FileText } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ArrowRight, FileText, LineChart, TrendingDown } from 'lucide-react'
 
 const MAX = 15
 
@@ -15,8 +16,11 @@ function getDiscount(n) {
   return Math.round((1 - getRate(n) / 2.0) * 100)
 }
 
+/**
+ * Split pricing card (Figma): left — object slider, right — computed price.
+ */
 export default function PricingCalculator() {
-  const [objects, setObjects] = useState(1)
+  const [objects, setObjects] = useState(10)
   const [animKey, setAnimKey] = useState(0)
   const isEnterprise = objects >= MAX
   const rate = getRate(objects)
@@ -31,134 +35,115 @@ export default function PricingCalculator() {
   }
 
   return (
-    <div className="flex flex-col gap-5 w-full">
+    <div className="grid grid-cols-1 md:grid-cols-2 text-left">
 
-      {/* Title row */}
-      <div className="flex items-center justify-center">
-        <p className="text-[15px] font-medium tracking-normal text-white">
-          გამოთვალეთ ფასი
-        </p>
-      </div>
-
-      {/* Object count row */}
-      <div className="flex items-center justify-between">
-        <span className="text-[13px] font-medium tracking-normal text-white/50">
-          აქტიური ობიექტები
-        </span>
-        <div className="flex items-center gap-2">
-          <span className="text-[26px] font-extrabold tracking-normal text-white leading-none tabular-nums">
-            {isEnterprise ? '15+' : objects}
-          </span>
+      {/* ── Left: slider ─────────────────────────────────────── */}
+      <div className="p-6 sm:p-8 border-b md:border-b-0 md:border-r border-[#3E4259]/[0.08]">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[15px] font-bold tracking-normal text-[#3E4259]">
+            აქტიური ობიექტები
+          </p>
           {discount > 0 && (
-            <span className={`flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full border transition-all duration-300 ${
-              discount >= 30
-                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25'
-                : 'bg-brand-600/20 text-brand-300 border-brand-500/30'
-            }`}>
-              <TrendingDown size={10} strokeWidth={2.5} />
-              -{discount}%
+            <span className="inline-flex items-center gap-1 h-[26px] px-3 rounded-full bg-emerald-50 border border-emerald-500/25 text-emerald-600 text-[11.5px] font-semibold whitespace-nowrap">
+              <TrendingDown size={11} strokeWidth={2.5} />
+              ფასდაკლება {discount} %
             </span>
           )}
         </div>
-      </div>
 
-      {/* Slider */}
-      <div>
-        <input
-          type="range"
-          min={1}
-          max={MAX}
-          value={objects}
-          onChange={handleSlider}
-          className="price-slider-dark"
-          style={{
-            background: `linear-gradient(to right, #3B5BDB ${pct}%, rgba(255,255,255,0.12) ${pct}%)`,
-          }}
-        />
-        <div className="flex justify-between text-[11px] font-medium tracking-normal text-white/30 mt-2">
-          <span>1</span>
-          <span>8</span>
-          <span>15+</span>
+        <p className="mt-3 text-[12.5px] font-medium leading-relaxed text-[#3E4259]/55">
+          გაითვალისწინეთ, ფასები მოცემულია დღგ-ს გარეშე
+        </p>
+
+        {/* Slider */}
+        <div className="mt-7">
+          <input
+            type="range"
+            min={1}
+            max={MAX}
+            value={objects}
+            onChange={handleSlider}
+            aria-label="აქტიური ობიექტების რაოდენობა"
+            className="price-slider-light"
+            style={{
+              background: `linear-gradient(to right, #3D64FE ${pct}%, #E7EAF3 ${pct}%)`,
+            }}
+          />
+          <div className="flex justify-between text-[11.5px] font-medium tracking-normal text-[#3E4259]/40 mt-2.5 px-0.5">
+            <span>1</span>
+            <span>5</span>
+            <span>10</span>
+            <span>15</span>
+          </div>
+        </div>
+
+        {/* Per-object rate pill */}
+        <div className="mt-7">
+          <span className="inline-flex items-center h-[34px] px-4 rounded-full bg-[#3D64FE]/[0.05] border border-[#3D64FE]/35 text-[12.5px] font-semibold text-[#3D64FE] tabular-nums">
+            {isEnterprise ? 'ინდივიდუალური ტარიფი' : `${rate.toFixed(1)}₾ / ობიექტზე დღეში`}
+          </span>
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="h-px bg-white/10" />
+      {/* ── Right: price ─────────────────────────────────────── */}
+      <div className="p-6 sm:p-8 flex flex-col">
+        <p className="text-[15px] font-bold tracking-normal text-[#3E4259]">
+          გამოთვალეთ ფასი
+        </p>
 
-      {/* Price display */}
-      {isEnterprise ? (
-        <div className="text-center py-3">
-          <p className="text-[18px] font-extrabold tracking-normal text-white mb-1.5">
-            15+ ობიექტი
-          </p>
-          <p className="text-[13px] font-medium tracking-normal text-white/45 leading-relaxed">
-            ინდივიდუალური ტარიფი — დაგვიკავშირდით.
-          </p>
-        </div>
-      ) : (
-        <div className="text-center">
-          {/* Daily total */}
-          <div key={`p-${animKey}`}>
-            <div className="flex items-baseline justify-center gap-1.5">
-              <span className="text-[48px] font-extrabold tracking-normal text-white tabular-nums leading-none">
-                {dailyTotal.toFixed(1)}
-              </span>
-              <span className="text-[22px] font-medium text-white/40 mb-1">₾</span>
-            </div>
-            <p className="text-[12px] font-medium tracking-normal text-white/40 mt-1">
-              დღეში სულ
+        {isEnterprise ? (
+          <>
+            <p key={`e-${animKey}`} className="price-pop mt-4 text-[26px] sm:text-[28px] font-extrabold tracking-normal text-[#3D64FE] leading-none">
+              15+ ობიექტი
             </p>
-          </div>
-
-          {/* Per-object rate pill */}
-          <div className="inline-flex items-center gap-1.5 bg-brand-600/15 border border-brand-500/25 rounded-full px-3 py-1 mt-3">
-            <span className="text-brand-300 font-extrabold tabular-nums text-[13px]">
-              {rate.toFixed(1)}₾
-            </span>
-            <span className="text-brand-400/70 font-medium text-[12px]">
-              / ობიექტზე / დღეში
-            </span>
-          </div>
-
-          {/* Monthly estimate */}
-          <div className="mt-4 py-3 px-4 rounded-xl bg-white/[0.04] border border-white/[0.08]">
-            <p className="text-[11px] font-medium tracking-normal text-white/35 mb-1">
-              თვის შეფასება (~30 დღე)
+            <p className="mt-3 text-[13px] font-medium text-[#3E4259]/60 leading-relaxed">
+              ინდივიდუალური ტარიფი — დაგვიკავშირდით.
             </p>
-            <p className="text-[22px] font-extrabold tracking-normal text-white tabular-nums">
-              ≈ {monthlyTotal}₾
+          </>
+        ) : (
+          <>
+            <p key={`p-${animKey}`} className="price-pop mt-4 text-[26px] sm:text-[28px] font-extrabold tracking-normal text-[#3D64FE] leading-none tabular-nums">
+              დღეში - {dailyTotal.toFixed(2)}₾
             </p>
-          </div>
-        </div>
-      )}
-
-      {/* CTA buttons */}
-      <div className="flex flex-col gap-2">
-        <a
-          href="https://service.fins.ge"
-          className="group flex items-center justify-center gap-2 w-full h-[44px] rounded-full text-[14px] font-extrabold tracking-normal text-white bg-[#3D64FE] border border-white/[0.18] transition-colors duration-200 hover:bg-brand-500"
-        >
-          {isEnterprise ? 'დაგვიკავშირდით' : 'დაწყება'}
-          <ArrowRight size={15} className="transition-transform duration-200 group-hover:translate-x-0.5" />
-        </a>
-
-        {!isEnterprise && (
-          <a
-            href={`/offer?objects=${objects}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group flex items-center justify-center gap-2.5 w-full h-[44px] rounded-full text-[13px] font-bold tracking-normal text-white bg-white/[0.08] border border-white/[0.28] hover:bg-white/[0.14] hover:border-white/[0.45] transition-all duration-200"
-          >
-            <FileText size={14} className="text-white/70 group-hover:text-white transition-colors duration-200" />
-            რეკვიზიტის მომზადება
-          </a>
+            <p className="mt-3.5 flex items-center gap-2 text-[13px] font-semibold text-emerald-600">
+              <LineChart size={15} strokeWidth={2} className="shrink-0" />
+              თვიური შეფასება 30 დღე
+              <span key={`m-${animKey}`} className="price-pop font-extrabold tabular-nums">{monthlyTotal}₾</span>
+            </p>
+          </>
         )}
-      </div>
 
-      {/* VAT note */}
-      <p className="text-center text-[11px] font-medium tracking-normal text-white/30">
-        * ფასები მოცემულია დღგ-ს გარეშე
-      </p>
+        <div className="mt-auto pt-7 flex flex-col gap-2.5">
+          {isEnterprise ? (
+            <Link
+              to="/contact"
+              className="group flex items-center justify-center gap-2 w-full h-[46px] rounded-full text-[14px] font-semibold tracking-normal text-white bg-[#3D64FE] hover:bg-[#3556E5] transition-colors duration-200"
+            >
+              დაგვიკავშირდით
+              <ArrowRight size={15} className="transition-transform duration-200 group-hover:translate-x-0.5" />
+            </Link>
+          ) : (
+            <>
+              <a
+                href="https://service.fins.ge"
+                className="group flex items-center justify-center gap-2 w-full h-[46px] rounded-full text-[14px] font-semibold tracking-normal text-white bg-[#3D64FE] hover:bg-[#3556E5] hover:shadow-[0_12px_32px_rgba(61,100,254,0.30)] transition-all duration-200"
+              >
+                დაწყება
+                <ArrowRight size={15} className="transition-transform duration-200 group-hover:translate-x-0.5" />
+              </a>
+              <a
+                href={`/offer?objects=${objects}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-center gap-2.5 w-full h-[46px] rounded-full text-[13.5px] font-semibold tracking-normal text-[#3D64FE] bg-[#3D64FE]/[0.09] hover:bg-[#3D64FE]/[0.15] transition-colors duration-200"
+              >
+                <FileText size={14} className="shrink-0" />
+                ინვოისის მომზადება
+              </a>
+            </>
+          )}
+        </div>
+      </div>
 
     </div>
   )

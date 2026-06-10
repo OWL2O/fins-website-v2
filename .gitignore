@@ -31,3 +31,6 @@ Thumbs.db
 # Coverage
 coverage/
 .vercel
+
+# local Claude preview launcher
+.claude/

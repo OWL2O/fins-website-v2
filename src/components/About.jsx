@@ -1,18 +1,9 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { CheckCircle2, Users, Briefcase, Building2, Globe } from 'lucide-react'
-import ConnectingLines from './ConnectingLines'
+import { ChevronDown, CheckCircle2, Users, Briefcase, Building2, Globe } from 'lucide-react'
 
 gsap.registerPlugin(ScrollTrigger)
-
-const STATS = [
-  { value: '+92%', label: 'აუთსორსული სერვისების გაწევის შესაძლებლობები აუდიტორული და ბუღალტრული კომპანიებისათვის 92%' },
-  { value: '+80%', label: 'ფინსში რეგისტრაციის შემდეგ ბიზნეს პროცესების ზოგადი ეფექტიანობის ზრდა +80%' },
-  { value: '500+', label: 'მომხმარებელი რეგისტრირებულია და იყენებს ჩვენს სერვისს' },
-  { value: '99.9%', label: 'საოპერაციო ფუნქციონალის და ბუღალტრული ტრანზაქციების ავტომატიზაცია' },
-  { value: '95%',  label: 'სრული ბუღალტრული ავტომატიზირებული ფუნქციონალი' },
-]
 
 const CAPABILITIES = [
   'მართონ საკუთარი ბუღალტრული მოდული გლობალურად ონლაინ სივრცეში სრულყოფილად და უსაფრთხოდ',
@@ -29,6 +20,7 @@ const PARTNERS = [
 
 export default function About() {
   const sectionRef = useRef(null)
+  const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -91,69 +83,91 @@ export default function About() {
           </p>
         </div>
 
-        {/* Detail section — always visible, no toggle */}
-        <div data-about-badge className="mt-12 lg:mt-14">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-2">
+        {/* Switch — expand/collapse details */}
+        <div data-about-badge className="mt-12 lg:mt-10 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setExpanded((s) => !s)}
+            aria-expanded={expanded}
+            className="inline-flex items-center gap-1.5 text-[13px] font-semibold leading-none tracking-normal px-5 py-3 rounded-full border border-brand-600/40 text-brand-600 bg-brand-600/[0.04] hover:bg-brand-600/[0.09] transition-colors duration-200"
+          >
+            {expanded ? 'ნაკლები' : 'მეტი'}
+            <ChevronDown
+              size={14}
+              className={`transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}
+            />
+          </button>
+        </div>
 
-            {/* Left: Capabilities */}
-            <div className="rounded-2xl bg-white border border-brand-600/[0.14] p-7 lg:p-8">
-              <p className="text-[11px] font-bold tracking-[0.12em] uppercase text-brand-600 mb-5">
-                შესაძლებლობები
-              </p>
-              <ul className="flex flex-col gap-4">
-                {CAPABILITIES.map((c, i) => (
-                  <li key={i} className="flex items-start gap-3 text-[14px] sm:text-[15px] leading-snug text-[#3E4259] font-medium">
-                    <CheckCircle2 size={20} strokeWidth={1.5} className="shrink-0 text-brand-600 mt-0.5" />
-                    <span>{c}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+        {/* Expandable detail section */}
+        <div
+          className={`grid transition-all duration-500 ease-in-out ${
+            expanded ? 'grid-rows-[1fr] mt-10' : 'grid-rows-[0fr]'
+          }`}
+        >
+          <div className="overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-2">
 
-            {/* Right: Partnerships + Future */}
-            <div className="flex flex-col gap-5">
-
-              {/* Partnerships */}
+              {/* Left: Capabilities */}
               <div className="rounded-2xl bg-white border border-brand-600/[0.14] p-7 lg:p-8">
                 <p className="text-[11px] font-bold tracking-[0.12em] uppercase text-brand-600 mb-5">
-                  ვთანამშრომლობთ
+                  შესაძლებლობები
                 </p>
-                <div className="flex flex-wrap gap-2 mb-5">
-                  {PARTNERS.map(({ Icon, label }) => (
-                    <div
-                      key={label}
-                      className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-brand-600/[0.05] border border-brand-600/[0.18] text-[13px] font-medium text-[#3E4259]"
-                    >
-                      <Icon size={13} className="text-brand-600 shrink-0" />
-                      {label}
-                    </div>
+                <ul className="flex flex-col gap-4">
+                  {CAPABILITIES.map((c, i) => (
+                    <li key={i} className="flex items-start gap-3 text-[14px] sm:text-[15px] leading-snug text-[#3E4259] font-medium">
+                      <CheckCircle2 size={20} strokeWidth={1.5} className="shrink-0 text-brand-600 mt-0.5" />
+                      <span>{c}</span>
+                    </li>
                   ))}
-                </div>
-                <p className="text-[14px] leading-relaxed text-[#3E4259] font-medium">
-                  მათ ვაძლევთ შესაძლებლობას ჩვენს სივრცეში რეგისტრირებულ ბიზნეს სუბიექტებს
-                  შესთავაზონ სხვადასხვა სერვისები ურთიერთ შეთანხმების საფუძველზე. ეს
-                  ბიზნესის ოპტიმიზაციის ეფექტურობის უდაო განმსაზღვრელია.
-                </p>
+                </ul>
               </div>
 
-              {/* Future plans */}
-              <div className="rounded-2xl bg-brand-600/[0.03] border border-brand-600/[0.14] p-7 lg:p-8">
-                <div className="flex items-center gap-2 mb-4">
-                  <Globe size={15} className="text-brand-600 shrink-0" />
-                  <p className="text-[11px] font-bold tracking-[0.12em] uppercase text-brand-600">
-                    განვითარება
+              {/* Right: Partnerships + Future */}
+              <div className="flex flex-col gap-5">
+
+                {/* Partnerships */}
+                <div className="rounded-2xl bg-white border border-brand-600/[0.14] p-7 lg:p-8">
+                  <p className="text-[11px] font-bold tracking-[0.12em] uppercase text-brand-600 mb-5">
+                    ვთანამშრომლობთ
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-5">
+                    {PARTNERS.map(({ Icon, label }) => (
+                      <div
+                        key={label}
+                        className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-brand-600/[0.05] border border-brand-600/[0.18] text-[13px] font-medium text-[#3E4259]"
+                      >
+                        <Icon size={13} className="text-brand-600 shrink-0" />
+                        {label}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[14px] leading-relaxed text-[#3E4259] font-medium">
+                    მათ ვაძლევთ შესაძლებლობას ჩვენს სივრცეში რეგისტრირებულ ბიზნეს სუბიექტებს
+                    შესთავაზონ სხვადასხვა სერვისები ურთიერთ შეთანხმების საფუძველზე. ეს
+                    ბიზნესის ოპტიმიზაციის ეფექტურობის უდაო განმსაზღვრელია.
                   </p>
                 </div>
-                <p className="text-[14px] leading-relaxed text-[#3E4259] font-medium">
-                  ჩვენი კომპანია სრულად ორიენტირებულია სერვისების სრულყოფასა და ახალი კრეატიული
-                  სერვისების დანერგვაზე. ვგეგმავთ უახლოეს მომავალში სხვადასხვა ქვეყნებში
-                  გაფართოებას — მზად ვართ პოტენციური პარტნიორებისაგან წინადადებებისათვის.
-                </p>
-                <p className="mt-4 pt-4 border-t border-brand-600/[0.12] text-[12px] leading-relaxed text-[#3E4259]/55 font-medium">
-                  პროდუქტი FINS (fins.ge) წარმოადგენს შპს „ფინს პროგრამ სერვისი"-ს (ს/კ: 436258826)
-                  ინტელექტუალურ საკუთრებას — სრულად ქართული პროდუქტი, შექმნილი ქართველი
-                  პროფესიონალი დეველოპერებისა და ფინანსისტების მიერ.
-                </p>
+
+                {/* Future plans */}
+                <div className="rounded-2xl bg-brand-600/[0.03] border border-brand-600/[0.14] p-7 lg:p-8">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Globe size={15} className="text-brand-600 shrink-0" />
+                    <p className="text-[11px] font-bold tracking-[0.12em] uppercase text-brand-600">
+                      განვითარება
+                    </p>
+                  </div>
+                  <p className="text-[14px] leading-relaxed text-[#3E4259] font-medium">
+                    ჩვენი კომპანია სრულად ორიენტირებულია სერვისების სრულყოფასა და ახალი კრეატიული
+                    სერვისების დანერგვაზე. ვგეგმავთ უახლოეს მომავალში სხვადასხვა ქვეყნებში
+                    გაფართოებას — მზად ვართ პოტენციური პარტნიორებისაგან წინადადებებისათვის.
+                  </p>
+                  <p className="mt-4 pt-4 border-t border-brand-600/[0.12] text-[12px] leading-relaxed text-[#3E4259]/55 font-medium">
+                    პროდუქტი FINS (fins.ge) წარმოადგენს შპს „ფინს პროგრამ სერვისი"-ს (ს/კ: 436258826)
+                    ინტელექტუალურ საკუთრებას — სრულად ქართული პროდუქტი, შექმნილი ქართველი
+                    პროფესიონალი დეველოპერებისა და ფინანსისტების მიერ.
+                  </p>
+                </div>
               </div>
             </div>
           </div>

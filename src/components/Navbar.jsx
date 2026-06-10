@@ -13,13 +13,17 @@ const NAV = [
   { label: 'სერვისები', href: '#services' },
   { label: 'ჩვენ შესახებ', href: '#about' },
   { label: 'ბუღალტერია', href: '#accounting' },
-  { label: 'FAQ', href: '#faq' },
   { label: 'ფასები', href: '#pricing' },
+  { label: 'კონტაქტი', href: '#contact' },
 ]
 
 const SECTION_IDS = NAV.map((n) => n.href.slice(1))
 
-export default function Navbar() {
+/**
+ * theme="dark"  — transparent over dark pages (Contact, legal). Default.
+ * theme="light" — dark text over light pages (Home / Figma redesign).
+ */
+export default function Navbar({ theme = 'dark' }) {
   const headerRef = useRef(null)
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState('მთავარი')
@@ -27,6 +31,7 @@ export default function Navbar() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const isHome = pathname === '/'
+  const light = theme === 'light'
 
   // Entrance animation on load
   useEffect(() => {
@@ -86,13 +91,27 @@ export default function Navbar() {
     gsap.to(window, { scrollTo: href, duration: 0.8, ease: 'power2.inOut' })
   }
 
+  // ── Theme tokens ───────────────────────────────────────────
+  const headerBg = light
+    ? (scrolled ? 'rgba(255,255,255,0.88)' : open ? '#FFFFFF' : 'transparent')
+    : (scrolled ? 'rgba(15, 20, 27, 0.85)' : open ? '#161f3c' : 'transparent')
+
+  const borderCls = light ? 'border-[#3E4259]/[0.10]' : 'border-white/[0.22]'
+  const pillWrapCls = light
+    ? 'bg-[#3E4259]/[0.05] border-[#3E4259]/[0.08]'
+    : 'bg-white/[0.04] border-white/[0.08]'
+  const itemTextCls = light ? 'text-[#3E4259]' : 'text-white'
+  const activePillCls = light
+    ? 'bg-white border-[#3E4259]/[0.10] shadow-[0_3px_12px_rgba(62,66,89,0.10)]'
+    : 'bg-white/[0.08] border-white/[0.10]'
+
   return (
     <header
       ref={headerRef}
-      className="sticky top-0 z-50 border-b-[0.5px] border-white/[0.22] transition-[background-color,backdrop-filter] duration-300 ease-out"
+      className={`sticky top-0 z-50 border-b-[0.5px] ${borderCls} transition-[background-color,backdrop-filter] duration-300 ease-out`}
       style={{
         opacity: 0,
-        backgroundColor: scrolled ? 'rgba(15, 20, 27, 0.85)' : open ? '#161f3c' : 'transparent',
+        backgroundColor: headerBg,
         backdropFilter: scrolled ? 'blur(12px)' : 'none',
         WebkitBackdropFilter: scrolled ? 'blur(12px)' : 'none',
       }}
@@ -104,12 +123,13 @@ export default function Navbar() {
             href={isHome ? '#hero' : '/'}
             onClick={isHome ? (e) => scrollTo(e, '#hero') : undefined}
             className="shrink-0 flex items-center"
+            style={light ? { filter: 'brightness(0)', opacity: 0.85 } : undefined}
           >
             <Logo />
           </a>
 
           {/* Desktop nav pill — centered absolutely within header */}
-          <nav className="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2 h-[42px] min-[1700px]:h-[52px] bg-white/[0.04] border border-white/[0.08] rounded-full p-1">
+          <nav className={`hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2 h-[42px] min-[1700px]:h-[52px] border rounded-full p-1 ${pillWrapCls}`}>
             {NAV.map((item) => {
               const isActive = active === item.label
               return (
@@ -117,12 +137,12 @@ export default function Navbar() {
                   key={item.label}
                   href={item.href}
                   onClick={(e) => scrollTo(e, item.href)}
-                  className="relative h-full inline-flex items-center justify-center rounded-full px-[15px] text-[14px] font-normal leading-none tracking-normal text-white whitespace-nowrap"
+                  className={`relative h-full inline-flex items-center justify-center rounded-full px-[15px] text-[14px] font-normal leading-none tracking-normal whitespace-nowrap ${itemTextCls}`}
                 >
                   {isActive && (
                     <motion.span
                       layoutId="navActive"
-                      className="absolute inset-0 rounded-full bg-white/[0.08] border border-white/[0.10]"
+                      className={`absolute inset-0 rounded-full border ${activePillCls}`}
                       transition={{ type: 'spring', stiffness: 380, damping: 32 }}
                     />
                   )}
@@ -134,25 +154,41 @@ export default function Navbar() {
 
           {/* Right actions */}
           <div className="flex items-center gap-3 shrink-0">
-            <motion.a
-              href="https://service.fins.ge"
-              whileHover={{
-                borderColor: 'rgba(255,255,255,0.40)',
-                backgroundColor: 'rgba(255,255,255,0.05)',
-              }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="hidden sm:inline-flex items-center justify-center gap-2.5 w-[225px] h-[42px] min-[1700px]:h-[52px] rounded-full border-[0.5px] border-white/[0.22] bg-transparent text-[14px] font-normal leading-none tracking-normal text-white"
-            >
-              სისტემაში შესვლა
-              <ArrowRight size={15} />
-            </motion.a>
+            {light ? (
+              <motion.a
+                href="https://service.fins.ge"
+                whileHover={{ y: -1, boxShadow: '0 12px 34px rgba(61,100,254,0.30)' }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+                className="hidden sm:inline-flex items-center justify-center gap-2.5 w-[225px] h-[42px] min-[1700px]:h-[52px] rounded-full bg-[#3D64FE] hover:bg-[#3556E5] text-[14px] font-medium leading-none tracking-normal text-white transition-colors duration-200"
+              >
+                სისტემაში შესვლა
+                <ArrowRight size={15} />
+              </motion.a>
+            ) : (
+              <motion.a
+                href="https://service.fins.ge"
+                whileHover={{
+                  borderColor: 'rgba(255,255,255,0.40)',
+                  backgroundColor: 'rgba(255,255,255,0.05)',
+                }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+                className="hidden sm:inline-flex items-center justify-center gap-2.5 w-[225px] h-[42px] min-[1700px]:h-[52px] rounded-full border-[0.5px] border-white/[0.22] bg-transparent text-[14px] font-normal leading-none tracking-normal text-white"
+              >
+                სისტემაში შესვლა
+                <ArrowRight size={15} />
+              </motion.a>
+            )}
 
             {/* Hamburger */}
             <button
               type="button"
               aria-label="Toggle menu"
               onClick={() => setOpen((s) => !s)}
-              className={`lg:hidden relative flex flex-col items-center justify-center gap-0 rounded-full border border-white/[0.12] bg-transparent w-10 h-10 cursor-pointer hover:bg-white/[0.06] transition ${open ? 'burger-active' : 'burger-not-active'}`}
+              className={`lg:hidden relative flex flex-col items-center justify-center gap-0 rounded-full border bg-transparent w-10 h-10 cursor-pointer transition ${
+                light
+                  ? 'border-[#3E4259]/[0.18] hover:bg-[#3E4259]/[0.05] burger-dark'
+                  : 'border-white/[0.12] hover:bg-white/[0.06]'
+              } ${open ? 'burger-active' : 'burger-not-active'}`}
             >
               <span className="burger-line burger-top" />
               <span className="burger-line burger-mid" />
@@ -171,7 +207,11 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className={`lg:hidden fixed inset-x-0 top-[72px] px-5 pt-5 pb-8 min-h-[calc(100vh-72px)] z-30 ${scrolled ? 'bg-[rgba(15,20,27,0.85)] backdrop-blur-[12px]' : 'bg-[#161f3c]'}`}
+            className={`lg:hidden fixed inset-x-0 top-[72px] px-5 pt-5 pb-8 min-h-[calc(100vh-72px)] z-30 ${
+              light
+                ? 'bg-white'
+                : scrolled ? 'bg-[rgba(15,20,27,0.85)] backdrop-blur-[12px]' : 'bg-[#161f3c]'
+            }`}
           >
             <nav className="flex flex-col">
               {NAV.map((item) => (
@@ -179,7 +219,7 @@ export default function Navbar() {
                   key={item.label}
                   href={item.href}
                   onClick={(e) => { scrollTo(e, item.href); setOpen(false) }}
-                  className="px-5 py-3.5 text-white text-[14px] font-normal"
+                  className={`px-5 py-3.5 text-[14px] font-normal ${light ? 'text-[#3E4259]' : 'text-white'}`}
                 >
                   {item.label}
                 </a>

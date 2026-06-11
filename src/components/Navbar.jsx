@@ -42,9 +42,27 @@ export default function Navbar({ theme = 'dark' }) {
   }, [])
 
   useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : ''
+    if (open) {
+      const scrollY = window.scrollY
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollY}px`
+      document.body.style.left = '0'
+      document.body.style.right = '0'
+    } else {
+      const scrollY = document.body.style.top
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.left = ''
+      document.body.style.right = ''
+      if (scrollY) window.scrollTo(0, -parseInt(scrollY, 10))
+    }
     window.dispatchEvent(new CustomEvent('navmenu', { detail: { open } }))
-    return () => { document.body.style.overflow = '' }
+    return () => {
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.left = ''
+      document.body.style.right = ''
+    }
   }, [open])
 
   useEffect(() => {

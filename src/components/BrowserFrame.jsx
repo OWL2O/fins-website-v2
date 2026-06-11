@@ -5,7 +5,7 @@ import { Lock } from 'lucide-react'
  * BrowserFrame — macOS-style browser chrome (traffic lights + URL pill)
  * wrapping arbitrary demo content.
  */
-export function BrowserFrame({ url = 'https://fins.systemctl.xyz/', children }) {
+export function BrowserFrame({ url = 'https://fins.ge/', children }) {
   return (
     <div className="rounded-[18px] bg-white border border-[#3E4259]/[0.10] shadow-[0_30px_90px_rgba(40,55,120,0.16),0_8px_28px_rgba(40,55,120,0.08)] overflow-hidden">
       {/* Chrome bar */}

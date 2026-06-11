@@ -267,7 +267,7 @@ export default function FAQ() {
               <div
                 key={item.q}
                 data-faq-item
-                className="rounded-2xl bg-white overflow-hidden transition-all duration-300 ease-in-out"
+                className="rounded-2xl bg-white overflow-hidden transition-[border-color,box-shadow] duration-300 ease-in-out"
                 style={{
                   border: isOpen
                     ? '1px solid rgba(61, 100, 254, 0.22)'

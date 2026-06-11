@@ -92,7 +92,7 @@ export default function CTA() {
             e.preventDefault()
             gsap.to(window, { scrollTo: '#contact', duration: 0.8, ease: 'power2.inOut' })
           }}
-          className="mt-9 inline-flex items-center justify-center h-[46px] px-8 rounded-full text-[14px] font-semibold leading-none tracking-normal text-[#3D64FE] bg-white border border-[#3D64FE]/35 hover:border-[#3D64FE]/70 hover:bg-[#3D64FE]/[0.04] hover:-translate-y-px transition-all duration-300 ease-out shadow-[0_4px_18px_rgba(61,100,254,0.08)]"
+          className="mt-9 inline-flex items-center justify-center h-[46px] px-8 rounded-full text-[14px] font-semibold leading-none tracking-normal text-[#3D64FE] bg-white border border-[#3D64FE]/35 hover:border-[#3D64FE]/70 hover:bg-[#3D64FE]/[0.04] hover:-translate-y-px transition-[border-color,background-color,box-shadow] duration-300 ease-out shadow-[0_4px_18px_rgba(61,100,254,0.08)]"
         >
           ჩანიშნე შეხვედრა
         </a>

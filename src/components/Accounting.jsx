@@ -193,7 +193,7 @@ export default function Accounting() {
         <div ref={demoRevealRef} className="w-full">
           <div ref={demoFloatEl} style={{ willChange: 'transform' }}>
             <DemoScaler naturalWidth={920} naturalHeight={604}>
-              <BrowserFrame url="https://fins.systemctl.xyz/">
+              <BrowserFrame url="https://fins.ge/">
                 <DashboardDemo />
               </BrowserFrame>
             </DemoScaler>

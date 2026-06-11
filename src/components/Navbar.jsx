@@ -84,11 +84,18 @@ export default function Navbar({ theme = 'dark' }) {
 
     const handleScroll = () => {
       const threshold = window.innerHeight * 0.35
+      const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2
       let current = SECTION_IDS[0]
-      for (const id of SECTION_IDS) {
-        const el = document.getElementById(id)
-        if (!el) continue
-        if (el.getBoundingClientRect().top <= threshold) current = id
+      if (atBottom) {
+        // Footer/contact section is shorter than the viewport, so its top
+        // never crosses the threshold below — detect bottom-of-page directly.
+        current = SECTION_IDS[SECTION_IDS.length - 1]
+      } else {
+        for (const id of SECTION_IDS) {
+          const el = document.getElementById(id)
+          if (!el) continue
+          if (el.getBoundingClientRect().top <= threshold) current = id
+        }
       }
       const match = NAV.find((n) => n.href === `#${current}`)
       if (match) setActive(match.label)
@@ -238,7 +245,15 @@ export default function Navbar({ theme = 'dark' }) {
                 <a
                   key={item.label}
                   href={item.href}
-                  onClick={(e) => { scrollTo(e, item.href); setOpen(false) }}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setOpen(false)
+                    // Defer until the menu-close effect restores normal body
+                    // scrolling — otherwise the scroll target is measured
+                    // while body is position:fixed (menu scroll-lock) and
+                    // resolves to the wrong offset.
+                    setTimeout(() => scrollTo(e, item.href), 0)
+                  }}
                   className={`px-5 py-3.5 text-[14px] font-normal ${light ? 'text-[#3E4259]' : 'text-white'}`}
                 >
                   {item.label}

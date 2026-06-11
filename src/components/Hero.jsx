@@ -152,7 +152,7 @@ export default function Hero() {
           onPointerLeave={resumeFloat}
         >
           <DemoScaler naturalWidth={920} naturalHeight={604} maxScale={1.18}>
-            <BrowserFrame url="https://fins.systemctl.xyz/">
+            <BrowserFrame url="https://fins.ge/">
               <TransactionsDemo />
             </BrowserFrame>
           </DemoScaler>

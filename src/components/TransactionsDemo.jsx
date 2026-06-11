@@ -209,7 +209,7 @@ export default function TransactionsDemo() {
       {/* ── Sidebar ─────────────────────────────────────────── */}
       <aside className="w-[216px] shrink-0 bg-[#3D4554] flex flex-col px-4 pt-5 pb-4 select-none" aria-hidden="true">
         <img
-          src="/fins-logo.png"
+          src="/logo.svg"
           alt=""
           className="h-[26px] w-auto self-start ml-2 mb-6 select-none"
           draggable={false}

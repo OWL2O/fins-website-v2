@@ -20,7 +20,7 @@ function getDiscount(n) {
  * Split pricing card (Figma): left — object slider, right — computed price.
  */
 export default function PricingCalculator() {
-  const [objects, setObjects] = useState(10)
+  const [objects, setObjects] = useState(1)
   const [animKey, setAnimKey] = useState(0)
   const isEnterprise = objects >= MAX
   const rate = getRate(objects)
@@ -40,9 +40,14 @@ export default function PricingCalculator() {
       {/* ── Left: slider ─────────────────────────────────────── */}
       <div className="p-6 sm:p-8 border-b md:border-b-0 md:border-r border-[#3E4259]/[0.08]">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-[15px] font-bold tracking-normal text-[#3E4259]">
-            აქტიური ობიექტები
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-[15px] font-bold tracking-normal text-[#3E4259]">
+              აქტიური ობიექტები
+            </p>
+            <span key={`n-${animKey}`} className="price-pop inline-flex items-center justify-center min-w-[26px] h-[26px] px-2 rounded-full bg-[#3D64FE]/10 text-[#3D64FE] text-[12.5px] font-bold tabular-nums">
+              {objects}
+            </span>
+          </div>
           {discount > 0 && (
             <span className="inline-flex items-center gap-1 h-[26px] px-3 rounded-full bg-emerald-50 border border-emerald-500/25 text-emerald-600 text-[11.5px] font-semibold whitespace-nowrap">
               <TrendingDown size={11} strokeWidth={2.5} />

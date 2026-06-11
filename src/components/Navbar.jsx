@@ -93,8 +93,8 @@ export default function Navbar({ theme = 'dark' }) {
 
   // ── Theme tokens ───────────────────────────────────────────
   const headerBg = light
-    ? (scrolled ? 'rgba(255,255,255,0.88)' : open ? '#FFFFFF' : 'transparent')
-    : (scrolled ? 'rgba(15, 20, 27, 0.85)' : open ? '#161f3c' : 'transparent')
+    ? (open ? '#FFFFFF' : scrolled ? 'rgba(255,255,255,0.88)' : 'transparent')
+    : (open ? '#161f3c' : scrolled ? 'rgba(15, 20, 27, 0.85)' : 'transparent')
 
   const borderCls = light ? 'border-[#3E4259]/[0.10]' : 'border-white/[0.22]'
   const pillWrapCls = light
@@ -113,8 +113,8 @@ export default function Navbar({ theme = 'dark' }) {
       style={{
         opacity: 0,
         backgroundColor: headerBg,
-        backdropFilter: scrolled ? 'blur(12px)' : 'none',
-        WebkitBackdropFilter: scrolled ? 'blur(12px)' : 'none',
+        backdropFilter: scrolled && !open ? 'blur(12px)' : 'none',
+        WebkitBackdropFilter: scrolled && !open ? 'blur(12px)' : 'none',
       }}
     >
       <div className="w-full max-w-full mx-auto px-6">
@@ -212,9 +212,7 @@ export default function Navbar({ theme = 'dark' }) {
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
           className={`lg:hidden fixed inset-x-0 top-[72px] px-5 pt-5 pb-8 min-h-[calc(100vh-72px)] z-40 ${
-            light
-              ? 'bg-white'
-              : scrolled ? 'bg-[rgba(15,20,27,0.85)] backdrop-blur-[12px]' : 'bg-[#161f3c]'
+            light ? 'bg-white' : 'bg-[#161f3c]'
           }`}
         >
             <nav className="flex flex-col">

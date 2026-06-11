@@ -106,6 +106,7 @@ export default function Navbar({ theme = 'dark' }) {
     : 'bg-white/[0.08] border-white/[0.10]'
 
   return (
+    <>
     <header
       ref={headerRef}
       className={`sticky top-0 z-50 border-b-[0.5px] ${borderCls} transition-[background-color,backdrop-filter] duration-300 ease-out`}
@@ -198,21 +199,24 @@ export default function Navbar({ theme = 'dark' }) {
         </div>
       </div>
 
-      {/* Mobile menu */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            key="mobile-menu"
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className={`lg:hidden fixed inset-x-0 top-[72px] px-5 pt-5 pb-8 min-h-[calc(100vh-72px)] z-30 ${
-              light
-                ? 'bg-white'
-                : scrolled ? 'bg-[rgba(15,20,27,0.85)] backdrop-blur-[12px]' : 'bg-[#161f3c]'
-            }`}
-          >
+    </header>
+
+    {/* Mobile menu — rendered outside <header> so backdrop-filter doesn't
+        create a containing block that breaks position:fixed */}
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          key="mobile-menu"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          className={`lg:hidden fixed inset-x-0 top-[72px] px-5 pt-5 pb-8 min-h-[calc(100vh-72px)] z-40 ${
+            light
+              ? 'bg-white'
+              : scrolled ? 'bg-[rgba(15,20,27,0.85)] backdrop-blur-[12px]' : 'bg-[#161f3c]'
+          }`}
+        >
             <nav className="flex flex-col">
               {NAV.map((item) => (
                 <a
@@ -264,8 +268,8 @@ export default function Navbar({ theme = 'dark' }) {
               </div>
             </nav>
           </motion.div>
-        )}
-      </AnimatePresence>
-    </header>
+      )}
+    </AnimatePresence>
+    </>
   )
 }

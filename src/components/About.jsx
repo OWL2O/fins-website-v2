@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { ChevronDown, CheckCircle2, Users, Briefcase, Building2, Globe } from 'lucide-react'
+import { CheckCircle2, Users, Briefcase, Building2, Globe } from 'lucide-react'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -20,7 +20,6 @@ const PARTNERS = [
 
 export default function About() {
   const sectionRef = useRef(null)
-  const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -83,30 +82,9 @@ export default function About() {
           </p>
         </div>
 
-        {/* Switch — expand/collapse details */}
-        <div data-about-badge className="mt-12 lg:mt-10 flex justify-center">
-          <button
-            type="button"
-            onClick={() => setExpanded((s) => !s)}
-            aria-expanded={expanded}
-            className="inline-flex items-center gap-1.5 text-[13px] font-semibold leading-none tracking-normal px-5 py-3 rounded-full border border-brand-600/40 text-brand-600 bg-brand-600/[0.04] hover:bg-brand-600/[0.09] transition-colors duration-200"
-          >
-            {expanded ? 'ნაკლები' : 'მეტი'}
-            <ChevronDown
-              size={14}
-              className={`transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}
-            />
-          </button>
-        </div>
-
-        {/* Expandable detail section */}
-        <div
-          className={`grid transition-all duration-500 ease-in-out ${
-            expanded ? 'grid-rows-[1fr] mt-10' : 'grid-rows-[0fr]'
-          }`}
-        >
-          <div className="overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-2">
+        {/* Detail section — always visible */}
+        <div className="mt-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-2">
 
               {/* Left: Capabilities */}
               <div className="rounded-2xl bg-white border border-brand-600/[0.14] p-7 lg:p-8">
@@ -169,7 +147,6 @@ export default function About() {
                   </p>
                 </div>
               </div>
-            </div>
           </div>
         </div>
 

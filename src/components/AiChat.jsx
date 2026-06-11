@@ -12,7 +12,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUp, Trash2, X, Sparkles, Ban, Check, History } from 'lucide-react';
+import { ArrowUp, Trash2, X, Ban, Check, History } from 'lucide-react';
 import BookingFormOverlay from './BookingFormOverlay.jsx';
 
 // ── colours ───────────────────────────────────────────────────────────────────
@@ -330,17 +330,18 @@ function fabStyle(isBanned, open) {
       ? 'linear-gradient(135deg,#ef4444,#b91c1c)'
       : open
         ? 'linear-gradient(135deg,#252f52,#1a2240)'
-        : 'linear-gradient(135deg,#5074E8,#3B5BDB)',
+        : 'none',
     boxShadow: isBanned
       ? '0 4px 20px rgba(239,68,68,0.40), 0 0 0 1px rgba(255,255,255,0.08)'
       : open
         ? '0 4px 20px rgba(0,0,0,0.30), 0 0 0 1px rgba(255,255,255,0.07)'
-        : '0 4px 22px rgba(59,91,219,0.45), 0 0 0 1px rgba(255,255,255,0.08)',
+        : '0 6px 24px rgba(0,0,0,0.15)',
     transition:'background 0.2s, box-shadow 0.2s',
+    overflow: 'hidden',
   };
 }
 
-// Icon inside the FAB — X when chat open, Ban when banned, Sparkles otherwise
+// Icon inside the FAB — X when chat open, Ban when banned, chat-icon.svg otherwise
 function FabInner({ open, isBanned }) {
   return (
     <AnimatePresence mode="wait" initial={false}>
@@ -353,8 +354,8 @@ function FabInner({ open, isBanned }) {
           <Ban size={18} />
         </motion.span>
       ) : (
-        <motion.span key="spark" initial={{rotate:90,opacity:0,scale:0.6}} animate={{rotate:0,opacity:1,scale:1}} exit={{rotate:-90,opacity:0,scale:0.6}} transition={{duration:0.14}} style={{display:'flex'}}>
-          <Sparkles size={18} />
+        <motion.span key="chat" initial={{rotate:90,opacity:0,scale:0.6}} animate={{rotate:0,opacity:1,scale:1}} exit={{rotate:-90,opacity:0,scale:0.6}} transition={{duration:0.14}} style={{display:'flex'}}>
+          <img src="/assets/chat-icon.svg" alt="" width={48} height={48} draggable={false} className="select-none" />
         </motion.span>
       )}
     </AnimatePresence>
@@ -1321,7 +1322,7 @@ export default function AiChat() {
           >
             {!open && !isBanned && (
               <motion.span
-                style={{ position:'absolute', inset:0, borderRadius:'50%', background:'rgba(79,107,229,0.28)', pointerEvents:'none' }}
+                style={{ position:'absolute', inset:0, borderRadius:'50%', background:'rgba(21,122,255,0.22)', pointerEvents:'none' }}
                 animate={{ scale:[1,1.42,1], opacity:[0.55,0,0.55] }}
                 transition={{ duration:3.8, repeat:Infinity, ease:'easeInOut' }}
               />

@@ -51,12 +51,12 @@ html, body, #root {
 
 html {
   scroll-behavior: auto;
-  background: #FFFFFF;
+  background: #0F141B;
 }
 
 body {
   margin: 0;
-  background: #FFFFFF;
+  background: #0F141B;
   color: #0A0E1A;
   font-family: 'Noto Sans Georgian', system-ui, sans-serif;
 }

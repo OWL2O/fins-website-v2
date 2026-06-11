@@ -32,10 +32,12 @@ export function BrowserFrame({ url = 'https://fins.systemctl.xyz/', children }) 
 
 /**
  * DemoScaler — renders children at a fixed "natural" pixel size and scales
- * them down proportionally to fit the parent width. Keeps complex pixel
- * layouts (like the dashboard replica) crisp at every viewport size.
+ * them proportionally to fit the parent width. Keeps complex pixel layouts
+ * (like the dashboard replica) crisp at every viewport size. `maxScale`
+ * lets a host render the demo larger than its natural size (default 1 —
+ * shrink only).
  */
-export function DemoScaler({ naturalWidth = 920, naturalHeight = 604, children }) {
+export function DemoScaler({ naturalWidth = 920, naturalHeight = 604, maxScale = 1, children }) {
   const hostRef = useRef(null)
   const [scale, setScale] = useState(1)
 
@@ -44,13 +46,13 @@ export function DemoScaler({ naturalWidth = 920, naturalHeight = 604, children }
     if (!el) return
     const measure = () => {
       const w = el.clientWidth
-      if (w > 0) setScale(Math.min(1, w / naturalWidth))
+      if (w > 0) setScale(Math.min(maxScale, w / naturalWidth))
     }
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [naturalWidth])
+  }, [naturalWidth, maxScale])
 
   return (
     <div ref={hostRef} className="relative w-full" style={{ height: naturalHeight * scale }}>

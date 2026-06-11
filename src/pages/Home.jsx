@@ -9,8 +9,8 @@ import Footer from '../components/Footer.jsx'
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen w-full bg-[#0F141B] text-ink-900 font-sans">
-      <Navbar />
+    <div className="relative min-h-screen w-full bg-white text-ink-900 font-sans">
+      <Navbar theme="light" />
       <main className="overflow-x-clip overflow-y-clip">
         <Hero />
         <Services />

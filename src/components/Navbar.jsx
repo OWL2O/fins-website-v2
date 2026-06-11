@@ -148,7 +148,7 @@ export default function Navbar({ theme = 'dark' }) {
           </a>
 
           {/* Desktop nav pill — centered absolutely within header */}
-          <nav className={`hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2 h-[42px] min-[1700px]:h-[52px] border rounded-full p-1 ${pillWrapCls}`}>
+          <nav className={`hidden xl:flex items-center gap-1 absolute left-1/2 -translate-x-1/2 h-[42px] min-[1700px]:h-[52px] border rounded-full p-1 ${pillWrapCls}`}>
             {NAV.map((item) => {
               const isActive = active === item.label
               return (
@@ -203,7 +203,7 @@ export default function Navbar({ theme = 'dark' }) {
               type="button"
               aria-label="Toggle menu"
               onClick={() => setOpen((s) => !s)}
-              className={`lg:hidden relative flex flex-col items-center justify-center gap-0 rounded-full border bg-transparent w-10 h-10 cursor-pointer transition ${
+              className={`xl:hidden relative flex flex-col items-center justify-center gap-0 rounded-full border bg-transparent w-10 h-10 cursor-pointer transition ${
                 light
                   ? 'border-[#3E4259]/[0.18] hover:bg-[#3E4259]/[0.05] burger-dark'
                   : 'border-white/[0.12] hover:bg-white/[0.06]'
@@ -229,7 +229,7 @@ export default function Navbar({ theme = 'dark' }) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
-          className={`lg:hidden fixed inset-x-0 top-[72px] px-5 pt-5 pb-8 min-h-[calc(100vh-72px)] z-40 ${
+          className={`xl:hidden fixed inset-x-0 top-[72px] lg:top-[65px] px-5 pt-5 pb-8 min-h-[calc(100vh-72px)] lg:min-h-[calc(100vh-65px)] z-40 ${
             light ? 'bg-white' : 'bg-[#161f3c]'
           }`}
         >

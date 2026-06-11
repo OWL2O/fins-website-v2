@@ -303,12 +303,12 @@ export default function Footer() {
             <div className="grid min-w-0 grid-cols-3 gap-x-3 sm:gap-x-6 gap-y-6">
               {COLUMNS.map((col) => (
                 <div key={col.title} className="flex min-w-0 flex-col items-start gap-3.5 text-left">
-                  <h3 className="text-[12.5px] sm:text-[13.5px] leading-none font-extrabold tracking-normal text-white">
+                  <h3 className="w-full text-[12.5px] sm:text-[13.5px] leading-snug font-extrabold tracking-normal text-white break-words">
                     {col.title}
                   </h3>
-                  <ul className="flex list-none flex-col gap-2.5">
+                  <ul className="flex list-none flex-col gap-2.5 w-full">
                     {col.links.map((link) => {
-                      const cls = 'block text-[11.5px] sm:text-[12.5px] leading-snug tracking-normal font-medium text-white/55 transition-colors duration-200 hover:text-white'
+                      const cls = 'block break-words text-[11.5px] sm:text-[12.5px] leading-snug tracking-normal font-medium text-white/55 transition-colors duration-200 hover:text-white'
                       return (
                         <li key={link.label} className="min-w-0">
                           {link.internal ? (

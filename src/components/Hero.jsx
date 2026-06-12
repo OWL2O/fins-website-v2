@@ -111,9 +111,10 @@ export default function Hero() {
         {/* ── Heading ──────────────────────────────────────────── */}
         <h1
           data-hero-enter
-          className="font-banner uppercase text-[#3E4259] tracking-normal leading-[1.18] text-[30px] sm:text-[44px] lg:text-[56px] min-[1700px]:text-[64px] max-w-[1000px]"
+          className="font-banner uppercase tracking-normal leading-[1.18] text-[30px] sm:text-[44px] lg:text-[56px] min-[1700px]:text-[64px] max-w-[1000px]"
         >
-          აღრიცხვის ავტომატიზაცია
+          <span className="block text-[#3D64FE]">ფინსი</span>
+          <span className="block text-[#3E4259]">ფინანსური აღრიცხვის ონლაინ პლატფორმა</span>
         </h1>
 
         {/* ── Subheading ───────────────────────────────────────── */}

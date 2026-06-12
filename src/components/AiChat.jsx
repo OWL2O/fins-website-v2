@@ -13,7 +13,6 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUp, Trash2, X, Ban, Check, History } from 'lucide-react';
-import BookingFormOverlay from './BookingFormOverlay.jsx';
 
 // ── colours ───────────────────────────────────────────────────────────────────
 const AI_BG   = '#1D2748';                           // AI bubble
@@ -1332,18 +1331,6 @@ export default function AiChat() {
 
         </div>
       </div>
-
-      {/* ── Booking form overlay — centered card, visible during guided flow ── */}
-      <AnimatePresence>
-        {bookingFlow && (
-          <BookingFormOverlay
-            flow={bookingFlow}
-            onClose={() => { setBookingFlow(null); setBookingSubmitted(false); }}
-            isMobile={isMobile}
-            onEdit={(field, val) => setBookingFlow(prev => prev ? { ...prev, data: { ...prev.data, [field]: val } } : prev)}
-          />
-        )}
-      </AnimatePresence>
 
     </>
   );

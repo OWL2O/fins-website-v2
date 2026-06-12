@@ -17,8 +17,6 @@ const BULLETS = [
 export default function Accounting() {
   const sectionRef = useRef(null)
   const demoRevealRef = useRef(null)
-  const demoFloatEl = useRef(null)
-  const floatTween = useRef(null)
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -101,30 +99,7 @@ export default function Accounting() {
       })
     }, sectionRef)
 
-    // Gentle float on the demo — runs only in view, respects reduced motion
-    let io = null
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      floatTween.current = gsap.to(demoFloatEl.current, {
-        y: -9,
-        duration: 3.4,
-        ease: 'sine.inOut',
-        yoyo: true,
-        repeat: -1,
-        force3D: true,
-        paused: true,
-      })
-      io = new IntersectionObserver(([entry]) => {
-        if (entry.isIntersecting) floatTween.current?.play()
-        else floatTween.current?.pause()
-      }, { threshold: 0 })
-      io.observe(demoFloatEl.current)
-    }
-
-    return () => {
-      io?.disconnect()
-      floatTween.current?.kill()
-      ctx.revert()
-    }
+    return () => ctx.revert()
   }, [])
 
   return (
@@ -191,13 +166,11 @@ export default function Accounting() {
 
         {/* ── Right column — live dashboard demo ───────────────── */}
         <div ref={demoRevealRef} className="w-full">
-          <div ref={demoFloatEl} style={{ willChange: 'transform' }}>
-            <DemoScaler naturalWidth={920} naturalHeight={604}>
-              <BrowserFrame url="https://fins.ge/">
-                <DashboardDemo />
-              </BrowserFrame>
-            </DemoScaler>
-          </div>
+          <DemoScaler naturalWidth={920} naturalHeight={604}>
+            <BrowserFrame url="https://fins.ge/">
+              <DashboardDemo />
+            </BrowserFrame>
+          </DemoScaler>
         </div>
 
       </div>

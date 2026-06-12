@@ -85,7 +85,7 @@ const emptyForm = () => ({
 const GRID = 'grid grid-cols-[70px_96px_88px_88px_1fr_72px_56px_58px] items-center px-3'
 
 const inputCls = (error) =>
-  `w-full h-[40px] rounded-[10px] border-[1.4px] bg-white px-3.5 text-[12px] font-medium text-[#313A4D] placeholder:text-[#3E4259]/45 outline-none transition-colors duration-200 focus:border-[#3D64FE] ${
+  `w-full h-[40px] shrink-0 rounded-[10px] border-[1.4px] bg-white px-3.5 text-[12px] font-medium text-[#313A4D] placeholder:text-[#3E4259]/45 outline-none transition-colors duration-200 focus:border-[#3D64FE] ${
     error ? 'border-[#F4485D]' : 'border-[#3E4259]/[0.30]'
   }`
 
@@ -130,6 +130,7 @@ const accountOptions = ACCOUNTS.map((a) => ({ value: a.code, text: `${a.code} â€
 export default function TransactionsDemo() {
   const [rows, setRows] = useState(seedRows)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [discovered, setDiscovered] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [errors, setErrors] = useState({})
   const [spin, setSpin] = useState(0)
@@ -155,6 +156,7 @@ export default function TransactionsDemo() {
   }
 
   const openDrawer = () => {
+    setDiscovered(true)
     setForm(emptyForm())
     setErrors({})
     setDrawerOpen(true)
@@ -309,7 +311,7 @@ export default function TransactionsDemo() {
           <button
             type="button"
             onClick={openDrawer}
-            className="h-[36px] px-4 rounded-lg border border-[#3E4259]/[0.14] bg-white flex items-center gap-2 text-[12px] font-semibold text-[#313A4D] cursor-pointer hover:bg-[#F4F6FE] hover:border-[#3D64FE]/40 transition-colors duration-200"
+            className={`h-[36px] px-4 rounded-lg border border-[#3E4259]/[0.14] bg-white flex items-center gap-2 text-[12px] font-semibold text-[#313A4D] cursor-pointer hover:bg-[#F4F6FE] hover:border-[#3D64FE]/40 transition-[background-color,border-color,box-shadow] duration-300 ${discovered ? '' : 'demo-cta-pulse'}`}
           >
             <span className="flex h-[16px] w-[16px] items-center justify-center rounded-full border-[1.4px] border-[#313A4D]">
               <Plus size={10} strokeWidth={2.6} />

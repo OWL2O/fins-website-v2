@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { CheckCircle2, Users, Briefcase, Building2, Globe } from 'lucide-react'
+import { Check, Users, Briefcase, Building2, Globe } from 'lucide-react'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -17,6 +17,15 @@ const PARTNERS = [
   { Icon: Briefcase, label: 'ბუღალტრული და აუდიტორული კომპანიები' },
   { Icon: Building2, label: 'სხვადასხვა სერვისების გამცემი კომპანიები' },
 ]
+
+// Shared glass-card surface — semi-transparent white over the soft ambient
+// tints below, hairline border, one diffused shadow. Deliberately quiet.
+const CARD =
+  'relative rounded-[20px] bg-white/55 backdrop-blur-[12px] border border-[#3E4259]/[0.08] ' +
+  'shadow-[0_1px_2px_rgba(62,66,89,0.03),0_24px_60px_-28px_rgba(62,66,89,0.18)] p-8 lg:p-10'
+
+const KICKER =
+  'text-[11px] font-semibold tracking-[0.14em] uppercase text-brand-600/90'
 
 export default function About() {
   const sectionRef = useRef(null)
@@ -37,13 +46,19 @@ export default function About() {
         headerTl.to(el, { y: 0, opacity: 1, duration: 1, ease: 'power2.inOut' }, i * 0.1)
       })
 
-      gsap.set('[data-about-badge]', { y: 40, opacity: 0 })
-      gsap.to('[data-about-badge]', {
-        y: 0, opacity: 1, duration: 1, ease: 'power2.inOut',
+      // Three blocks — gentle stagger rise
+      const cardEls = gsap.utils.toArray('[data-about-card]')
+      gsap.set(cardEls, { y: 44, opacity: 0 })
+      const cardsTl = gsap.timeline({
         scrollTrigger: {
-          trigger: '[data-about-badge]',
-          start: 'top 87%', end: 'top 60%', scrub: 1,
+          trigger: '[data-about-cards]',
+          start: 'top 88%',
+          end: 'top 55%',
+          scrub: 1,
         },
+      })
+      cardEls.forEach((el, i) => {
+        cardsTl.to(el, { y: 0, opacity: 1, duration: 1, ease: 'power2.inOut' }, i * 0.12)
       })
     }, sectionRef)
 
@@ -57,7 +72,7 @@ export default function About() {
       className="py-14 sm:py-20 lg:py-28 overflow-hidden"
       style={{
         background:
-          'linear-gradient(to bottom, #FFFFFF 0, #FFFFFF 1080px, #F8F8F5 1080px, #F8F8F5 100%)',
+          'linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 42%, #F8F8F5 88%, #F8F8F5 100%)',
       }}
     >
       <div className="max-w-full mx-auto px-5 sm:px-8 lg:px-12">
@@ -69,84 +84,83 @@ export default function About() {
           </p>
           <h2
             data-about-enter
-            className="font-banner uppercase tracking-normal text-center text-[28px] sm:text-[34px] md:text-[35px] lg:text-[35px] text-[#3E4259] leading-[1.2] lg:leading-[51px]"
+            className="font-banner uppercase tracking-[-0.02em] text-center text-[28px] sm:text-[34px] md:text-[35px] lg:text-[35px] text-[#3E4259] leading-[1.2] lg:leading-[51px]"
           >
             თქვენი ბიზნესის <span className="text-brand-600">სანდო</span>
             <br />
             პარტნიორი
           </h2>
-          <p data-about-enter className="text-center text-[16px] leading-normal tracking-normal text-[#3E4259] font-medium">
+          <p data-about-enter className="text-center text-[16px] leading-[1.6] tracking-normal text-[#3E4259]/80 font-normal">
             ჩვენმა კომპანიამ შეიმუშავა მრავალი ინოვაციური პროდუქტი, რათა ჩვენს მომხმარებლებს და
             პარტნიორებს მოვცეთ უნიკალური შესაძლებლობები მაღალტექნოლოგიურად და უსაფრთხოდ
             განავითარონ საკუთარი ბიზნეს შესაძლებლობები.
           </p>
         </div>
 
-        {/* Detail section — always visible */}
-        <div className="mt-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-2">
+        {/* Three blocks */}
+        <div data-about-cards className="relative mt-12 lg:mt-16">
 
-              {/* Left: Capabilities */}
-              <div className="rounded-2xl bg-white border border-brand-600/[0.14] p-7 lg:p-8">
-                <p className="text-[11px] font-bold tracking-[0.12em] uppercase text-brand-600 mb-5">
-                  შესაძლებლობები
-                </p>
-                <ul className="flex flex-col gap-4">
-                  {CAPABILITIES.map((c, i) => (
-                    <li key={i} className="flex items-start gap-3 text-[14px] sm:text-[15px] leading-snug text-[#3E4259] font-medium">
-                      <CheckCircle2 size={20} strokeWidth={1.5} className="shrink-0 text-brand-600 mt-0.5" />
-                      <span>{c}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+          {/* Soft ambient tints behind the glass so the blur reads — very faint */}
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+            <div className="absolute -top-20 left-[6%] h-[340px] w-[340px] rounded-full bg-brand-400/[0.10] blur-3xl" />
+            <div className="absolute top-[34%] left-[42%] h-[280px] w-[280px] rounded-full bg-[#8FB0FF]/[0.10] blur-3xl" />
+            <div className="absolute -bottom-16 right-[5%] h-[320px] w-[320px] rounded-full bg-brand-300/[0.12] blur-3xl" />
+          </div>
 
-              {/* Right: Partnerships + Future */}
-              <div className="flex flex-col gap-5">
+          <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6 items-stretch">
 
-                {/* Partnerships */}
-                <div className="rounded-2xl bg-white border border-brand-600/[0.14] p-7 lg:p-8">
-                  <p className="text-[11px] font-bold tracking-[0.12em] uppercase text-brand-600 mb-5">
-                    ვთანამშრომლობთ
-                  </p>
-                  <div className="flex flex-wrap gap-2 mb-5">
-                    {PARTNERS.map(({ Icon, label }) => (
-                      <div
-                        key={label}
-                        className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-brand-600/[0.05] border border-brand-600/[0.18] text-[13px] font-medium text-[#3E4259]"
-                      >
-                        <Icon size={13} className="text-brand-600 shrink-0" />
-                        {label}
-                      </div>
-                    ))}
+            {/* 1 — შესაძლებლობები */}
+            <div data-about-card className={CARD}>
+              <p className={`${KICKER} mb-7`}>შესაძლებლობები</p>
+              <ul className="flex flex-col gap-5">
+                {CAPABILITIES.map((c, i) => (
+                  <li key={i} className="flex items-start gap-3.5 text-[14px] leading-[1.6] text-[#3E4259]/75 font-normal">
+                    <Check size={16} strokeWidth={2} className="shrink-0 text-brand-600/80 mt-[3px]" />
+                    <span>{c}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* 2 — ვთანამშრომლობთ */}
+            <div data-about-card className={CARD}>
+              <p className={`${KICKER} mb-7`}>ვთანამშრომლობთ</p>
+              <div className="flex flex-col items-start gap-2.5 mb-7">
+                {PARTNERS.map(({ Icon, label }) => (
+                  <div
+                    key={label}
+                    className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-brand-600/[0.04] border border-brand-600/[0.14] text-[13px] font-normal text-[#3E4259]/90"
+                  >
+                    <Icon size={13} strokeWidth={1.75} className="text-brand-600 shrink-0" />
+                    {label}
                   </div>
-                  <p className="text-[14px] leading-relaxed text-[#3E4259] font-medium">
-                    მათ ვაძლევთ შესაძლებლობას ჩვენს სივრცეში რეგისტრირებულ ბიზნეს სუბიექტებს
-                    შესთავაზონ სხვადასხვა სერვისები ურთიერთ შეთანხმების საფუძველზე. ეს
-                    ბიზნესის ოპტიმიზაციის ეფექტურობის უდაო განმსაზღვრელია.
-                  </p>
-                </div>
-
-                {/* Future plans */}
-                <div className="rounded-2xl bg-brand-600/[0.03] border border-brand-600/[0.14] p-7 lg:p-8">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Globe size={15} className="text-brand-600 shrink-0" />
-                    <p className="text-[11px] font-bold tracking-[0.12em] uppercase text-brand-600">
-                      განვითარება
-                    </p>
-                  </div>
-                  <p className="text-[14px] leading-relaxed text-[#3E4259] font-medium">
-                    ჩვენი კომპანია სრულად ორიენტირებულია სერვისების სრულყოფასა და ახალი კრეატიული
-                    სერვისების დანერგვაზე. ვგეგმავთ უახლოეს მომავალში სხვადასხვა ქვეყნებში
-                    გაფართოებას — მზად ვართ პოტენციური პარტნიორებისაგან წინადადებებისათვის.
-                  </p>
-                  <p className="mt-4 pt-4 border-t border-brand-600/[0.12] text-[12px] leading-relaxed text-[#3E4259]/55 font-medium">
-                    პროდუქტი FINS (fins.ge) წარმოადგენს შპს „ფინს პროგრამ სერვისი"-ს (ს/კ: 436258826)
-                    ინტელექტუალურ საკუთრებას — სრულად ქართული პროდუქტი, შექმნილი ქართველი
-                    პროფესიონალი დეველოპერებისა და ფინანსისტების მიერ.
-                  </p>
-                </div>
+                ))}
               </div>
+              <p className="text-[14px] leading-[1.6] text-[#3E4259]/75 font-normal">
+                მათ ვაძლევთ შესაძლებლობას ჩვენს სივრცეში რეგისტრირებულ ბიზნეს სუბიექტებს
+                შესთავაზონ სხვადასხვა სერვისები ურთიერთ შეთანხმების საფუძველზე. ეს
+                ბიზნესის ოპტიმიზაციის ეფექტურობის უდაო განმსაზღვრელია.
+              </p>
+            </div>
+
+            {/* 3 — განვითარება */}
+            <div data-about-card className={`${CARD} flex flex-col`}>
+              <div className="flex items-center gap-2 mb-7">
+                <Globe size={14} strokeWidth={1.75} className="text-brand-600 shrink-0" />
+                <p className={KICKER}>განვითარება</p>
+              </div>
+              <p className="text-[14px] leading-[1.6] text-[#3E4259]/75 font-normal">
+                ჩვენი კომპანია სრულად ორიენტირებულია სერვისების სრულყოფასა და ახალი კრეატიული
+                სერვისების დანერგვაზე. ვგეგმავთ უახლოეს მომავალში სხვადასხვა ქვეყნებში
+                გაფართოებას — მზად ვართ პოტენციური პარტნიორებისაგან წინადადებებისათვის.
+              </p>
+              <p className="mt-auto pt-7 text-[12px] leading-[1.6] text-[#3E4259]/50 font-normal border-t border-[#3E4259]/[0.08]">
+                პროდუქტი FINS (fins.ge) წარმოადგენს შპს „ფინს პროგრამ სერვისი"-ს (ს/კ: 436258826)
+                ინტელექტუალურ საკუთრებას — სრულად ქართული პროდუქტი, შექმნილი ქართველი
+                პროფესიონალი დეველოპერებისა და ფინანსისტების მიერ.
+              </p>
+            </div>
+
           </div>
         </div>
 

@@ -44,7 +44,7 @@ export default function PricingCalculator() {
             <p className="text-[15px] font-bold tracking-normal text-[#3E4259]">
               აქტიური ობიექტები
             </p>
-            <span key={`n-${animKey}`} className="price-pop inline-flex items-center justify-center min-w-[26px] h-[26px] px-2 rounded-full bg-[#3D64FE]/10 text-[#3D64FE] text-[12.5px] font-bold tabular-nums">
+            <span key={`n-${animKey}`} className="price-pop inline-flex items-center justify-center min-w-[28px] h-[28px] px-2 rounded-full bg-[#3D64FE]/10 text-[#3D64FE] text-[13px] font-bold leading-none tabular-nums">
               {objects}
             </span>
           </div>

@@ -198,165 +198,140 @@ const WhatsAppIcon = ({ size = 16 }) => (
   </svg>
 );
 
-// ── Maintenance notice card ───────────────────────────────────────────────────
-const ChevronRight = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
-    aria-hidden style={{ flexShrink:0, display:'block' }}>
-    <path d="M9 18l6-6-6-6" />
-  </svg>
-);
-
+// ── Maintenance notice card — glassmorphism, bright, simple ──────────────────
 function MaintenanceCard({ isMobile }) {
   const navigate = useNavigate();
 
   const actions = [
     {
-      icon: <WhatsAppIcon size={16} />,
+      icon: <WhatsAppIcon size={15} />,
       label: 'WhatsApp',
-      sub: 'სწრაფი პასუხი',
       href: 'https://wa.me/995500114090',
-      external: true,
+      tag: 'a',
+      target: '_blank',
     },
     {
-      icon: <Mail size={16} />,
+      icon: <Mail size={15} />,
       label: 'fins.ge@gmail.com',
-      sub: 'ელ-ფოსტა',
       href: 'mailto:fins.ge@gmail.com',
-      external: true,
+      tag: 'a',
     },
     {
-      icon: <Phone size={16} />,
+      icon: <Phone size={15} />,
       label: 'კონტაქტის ფორმა',
-      sub: 'ვებ-გვერდი',
-      href: '/contact',
-      external: false,
+      onClick: () => navigate('/contact'),  // button — no href, no scroll-to-footer bug
+      tag: 'button',
     },
   ];
 
+  const btnStyle = {
+    display: 'flex', alignItems: 'center', gap: 9,
+    width: '100%', boxSizing: 'border-box',
+    padding: '10px 13px',
+    background: 'rgba(0,0,0,0.045)',
+    border: '1px solid rgba(0,0,0,0.09)',
+    borderRadius: 12,
+    color: '#1a2035',
+    textDecoration: 'none',
+    fontSize: 13.5, fontWeight: 500,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    textAlign: 'left',
+    transition: 'background 0.14s, border-color 0.14s',
+  };
+
   return (
     <motion.div
-      initial={{ opacity:0, y:16, scale:0.95 }}
+      initial={{ opacity:0, y:14, scale:0.95 }}
       animate={{ opacity:1, y:0,  scale:1    }}
       exit={{    opacity:0, y:8,  scale:0.97 }}
-      transition={{ duration:0.24, ease:[0.22, 1, 0.36, 1] }}
+      transition={{ duration:0.22, ease:[0.22, 1, 0.36, 1] }}
       style={{
         position: 'fixed', zIndex: 9999,
         right:  isMobile ? '12px' : '24px',
         left:   isMobile ? '12px' : 'auto',
         bottom: 'calc(max(24px, env(safe-area-inset-bottom)) + 62px)',
-        width:  isMobile ? 'auto' : 'min(320px, calc(100vw - 48px))',
-        // Deep, near-black — doesn't fight the page
-        background: 'linear-gradient(160deg,#0e1521 0%,#0a1019 100%)',
-        borderRadius: 18,
-        border: '1px solid rgba(255,255,255,0.07)',
+        width:  isMobile ? 'auto' : 'min(310px, calc(100vw - 48px))',
+        // ── glassmorphism ──
+        background: 'rgba(255,255,255,0.82)',
+        backdropFilter: 'blur(24px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(160%)',
+        borderRadius: 20,
+        border: '1px solid rgba(255,255,255,0.65)',
         boxShadow: [
-          '0 32px 80px rgba(0,0,0,0.65)',
-          '0 8px 24px rgba(0,0,0,0.40)',
-          'inset 0 1px 0 rgba(255,255,255,0.05)',
+          '0 8px 32px rgba(0,0,0,0.10)',
+          '0 2px 8px rgba(0,0,0,0.06)',
+          'inset 0 1px 0 rgba(255,255,255,0.90)',
         ].join(', '),
-        overflow: 'hidden',
       }}
     >
-      {/* ── Header ─────────────────────────────────────────────── */}
-      <div style={{ padding: '18px 18px 16px' }}>
-        {/* Status badge */}
+      {/* ── Header ───────────────────────────────────────────── */}
+      <div style={{ padding: '16px 16px 14px' }}>
+
+        {/* Status row */}
         <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:10 }}>
           <span style={{
             display:'inline-block', flexShrink:0,
-            width:6, height:6, borderRadius:'50%',
+            width:7, height:7, borderRadius:'50%',
             background:'#F59E0B',
+            boxShadow:'0 0 0 3px rgba(245,158,11,0.18)',
           }} />
           <span style={{
-            fontSize:10.5, fontWeight:700, letterSpacing:'0.10em',
-            textTransform:'uppercase', color:'rgba(255,255,255,0.28)',
+            fontSize:10.5, fontWeight:700, letterSpacing:'0.09em',
+            textTransform:'uppercase', color:'rgba(0,0,0,0.38)',
           }}>
             ტექნიკური განახლება
           </span>
         </div>
 
-        {/* Notice text — `text-sm leading-relaxed text-slate-400` equivalent */}
+        {/* Notice */}
         <p style={{
-          color: 'rgba(148,163,184,0.80)',  /* slate-400 */
-          fontSize: 13,
-          lineHeight: 1.75,
+          color: 'rgba(15,23,42,0.72)',
+          fontSize: 13.5,
+          lineHeight: 1.65,
           margin: 0,
-          letterSpacing: '0.015em',
+          letterSpacing: '0.01em',
         }}>
-          AI ჩატი ამჟამად განახლების პროცესშია. გთხოვთ, ერთ-ერთი
-          საშუალებით მოგვწეროთ — სიამოვნებით დაგეხმარებით.
+          AI ჩატი ამჟამად განახლების პროცესშია. დაგვიკავშირდეთ — სიამოვნებით დაგეხმარებით:
         </p>
       </div>
 
-      {/* ── Divider ─────────────────────────────────────────────── */}
-      <div style={{ height:1, background:'rgba(255,255,255,0.06)' }} />
+      {/* ── Divider ──────────────────────────────────────────── */}
+      <div style={{ height:1, background:'rgba(0,0,0,0.07)', margin:'0 16px' }} />
 
-      {/* ── Action rows ─────────────────────────────────────────── */}
-      <div>
-        {actions.map(({ icon, label, sub, href, external }, i) => (
-          <a
-            key={label}
-            href={href}
-            {...(external ? { target:'_blank', rel:'noopener noreferrer' } : {})}
-            onClick={!external ? e => { e.preventDefault(); navigate('/contact'); } : undefined}
-            style={{
-              display:'flex', alignItems:'center', gap:12,
-              padding:'11px 16px',
-              textDecoration:'none',
-              borderBottom: i < actions.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-              cursor:'pointer',
-              transition:'background 0.15s',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-              const chev = e.currentTarget.querySelector('[data-chev]');
-              if (chev) { chev.style.transform = 'translateX(2px)'; chev.style.color = 'rgba(255,255,255,0.45)'; }
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = 'transparent';
-              const chev = e.currentTarget.querySelector('[data-chev]');
-              if (chev) { chev.style.transform = 'none'; chev.style.color = 'rgba(255,255,255,0.18)'; }
-            }}
-          >
-            {/* Icon */}
-            <div style={{
-              flexShrink:0, width:34, height:34, borderRadius:'50%',
-              background:'rgba(255,255,255,0.06)',
-              border:'1px solid rgba(255,255,255,0.07)',
-              display:'flex', alignItems:'center', justifyContent:'center',
-              color:'rgba(255,255,255,0.55)',
-            }}>
-              {icon}
-            </div>
-
-            {/* Label + sub */}
-            <div style={{ flex:1, minWidth:0 }}>
-              <div style={{
-                fontSize:13.5, fontWeight:500,
-                color:'rgba(255,255,255,0.82)',
-                lineHeight:1.3,
-                whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis',
+      {/* ── Buttons ──────────────────────────────────────────── */}
+      <div style={{ display:'flex', flexDirection:'column', gap:6, padding:'12px 16px 16px' }}>
+        {actions.map(({ icon, label, href, target, onClick, tag }) => {
+          const El = tag;
+          const extra = tag === 'a'
+            ? { href, ...(target ? { target, rel:'noopener noreferrer' } : {}) }
+            : { type:'button', onClick };
+          return (
+            <El
+              key={label}
+              {...extra}
+              style={btnStyle}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'rgba(0,0,0,0.07)';
+                e.currentTarget.style.borderColor = 'rgba(0,0,0,0.14)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'rgba(0,0,0,0.045)';
+                e.currentTarget.style.borderColor = 'rgba(0,0,0,0.09)';
+              }}
+            >
+              <span style={{
+                flexShrink:0, width:30, height:30, borderRadius:'50%',
+                background:'rgba(0,0,0,0.06)',
+                display:'flex', alignItems:'center', justifyContent:'center',
+                color:'rgba(15,23,42,0.55)',
               }}>
-                {label}
-              </div>
-              <div style={{
-                fontSize:11, color:'rgba(255,255,255,0.28)',
-                marginTop:2, lineHeight:1.2,
-              }}>
-                {sub}
-              </div>
-            </div>
-
-            {/* Chevron — shifts right on hover */}
-            <span data-chev="" style={{
-              color:'rgba(255,255,255,0.18)',
-              display:'flex', alignItems:'center',
-              transition:'transform 0.15s, color 0.15s',
-            }}>
-              <ChevronRight />
-            </span>
-          </a>
-        ))}
+                {icon}
+              </span>
+              <span>{label}</span>
+            </El>
+          );
+        })}
       </div>
     </motion.div>
   );

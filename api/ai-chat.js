@@ -61,16 +61,14 @@ async function buildRatesBlock(today) {
 უახლესი ხელმისაწვდომი კურსები ეროვნული ბანკის (NBG) მიხედვით, თარიღი: ${geoDate}.
 
 ⚠️ INTERNAL INSTRUCTION — DO NOT REPEAT TO USER:
-- ეს კურსები უკვე ქვემოთაა. get_currency_rates ფუნქცია (${dateStr}) ᲐᲠᲐᲡᲝᲓᲔᲡ გამოიყენო ამ თარიღისთვის.
-- NEVER mention "get_currency_rates" or any function names to the user. EVER.
+- ეს კურსები უკვე ქვემოთაა. ამ თარიღისთვის (${dateStr}) კურსი ქვემოთ მოცემულია — სხვა call საჭირო არ არის.
 - თუ მომხმარებელი ზოგადად ეკითხება კურსს — მაშინვე USD-ის კურსი მოუყვანე ქვემოდან, კითხვის გარეშე.
 - თუ კონკრეტულ ვალუტას ასახელებს — მხოლოდ ის კურსი, მოკლედ.
-- სხვა (წარსული) თარიღის მოთხოვნისას — get_currency_rates გამოიყენე, მაგრამ user-ს ეს ნუ ეტყვი.
+- სხვა (წარსული) თარიღის კურსი — Google Search-ით მოძებნე ან მომხმარებელს nbg.gov.ge-ზე გაგზავნე.
 
 ${lines.join('\n')}
 
-კურსების მოხსენიებისას ყოველთვის დაამატე: "NBG კურსი, ${geoDate}."
-სხვა (წარსული) თარიღის კურსი — get_currency_rates-ით, ჩუმად, შედეგი მოუყვანე მოკლედ.`;
+კურსების მოხსენიებისას ყოველთვის დაამატე: "NBG კურსი, ${geoDate}."`;
     _ratesCache = block;
     _ratesCacheTime = now;
     return block;
@@ -94,33 +92,8 @@ function sendJson(res, status, obj) {
   res.end(JSON.stringify(obj));
 }
 
-// National Bank of Georgia currency rates for a given date
-async function fetchNbgRates(date) {
-  try {
-    const url = `https://nbg.gov.ge/gw/api/ct/monetarypolicy/currencies/?currencies=&date=${date}&language=ka`;
-    const res = await fetch(url);
-    const NBG_FALLBACK = `კურსი ვერ მოიძებნა. მომხმარებელს შესთავაზე პირდაპირ ეროვნული ბანკის საიტი: [nbg.gov.ge](https://nbg.gov.ge/)`;
-    if (!res.ok) return NBG_FALLBACK;
-    const data = await res.json();
-    if (!data?.[0]?.currencies?.length) return NBG_FALLBACK;
-    const lines = data[0].currencies.map((c) => `${c.code}: ${c.quantity} = ${c.rate} ₾`).join('\n');
-    return `NBG კურსები, ${date}:\n${lines}`;
-  } catch {
-    return `კურსი ვერ მოიძებნა. მომხმარებელს შესთავაზე: [nbg.gov.ge](https://nbg.gov.ge/)`;
-  }
-}
-
-const NBG_TOOL = {
-  functionDeclarations: [{
-    name: 'get_currency_rates',
-    description: 'NBG-ის სავალუტო კურსების მიღება კონკრეტული თარიღისთვის. გამოიყენე მხოლოდ მაშინ, როცა მომხმარებელი ითხოვს სხვა (არა დღევანდელი) თარიღის კურსს.',
-    parameters: {
-      type: 'OBJECT',
-      properties: { date: { type: 'STRING', description: 'თარიღი YYYY-MM-DD ფორმატში, მაგ. 2026-05-10' } },
-      required: ['date'],
-    },
-  }],
-};
+// Google Search grounding — model decides when to search based on system prompt restrictions.
+const SEARCH_TOOL = { googleSearch: {} };
 
 export default async function handler(req, res) {
   // CORS / preflight
@@ -174,20 +147,24 @@ export default async function handler(req, res) {
 
   const basePayload = {
     systemInstruction: { parts: [{ text: systemInstruction }] },
-    tools: [NBG_TOOL],
+    tools: [SEARCH_TOOL],
     generationConfig: { temperature: 0.7, maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } },
   };
 
   // ── Model fallback chain ──
-  // Try the preferred (best-quality) model first; if it's rate-limited (429)
-  // or unavailable, fall back to the next. Dedupe so we never try one twice.
   const MODELS = [getModel(), 'gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-1.5-flash']
     .filter((v, i, a) => v && a.indexOf(v) === i);
 
-  // ── Phase 1: non-streaming call to detect function calls ──
-  let phase1, MODEL, lastStatus = 0;
+  // streaming text headers
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+
+  // ── Single streaming call with fallback chain ──
+  let upstream, lastStatus = 0;
   for (const m of MODELS) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(m)}:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(m)}:streamGenerateContent?alt=sse&key=${apiKey}`;
     let r;
     try {
       r = await fetch(url, {
@@ -201,69 +178,23 @@ export default async function handler(req, res) {
       continue;
     }
     if (r.status === 429 || r.status === 404 || r.status === 503 || r.status === 500 || r.status === 529) {
-      // quota / unavailable / overloaded / deprecated → try next model
       const hint = await r.text().catch(() => '');
       console.warn(`[ai-chat] ${m} → ${r.status}, falling back. hint: ${hint.slice(0, 120)}`);
       lastStatus = r.status;
       continue;
     }
-    phase1 = r; MODEL = m; break;       // got a usable response (ok or other error)
+    if (!r.ok) {
+      const errText = await r.text().catch(() => '');
+      console.error(`[ai-chat] Gemini error ${r.status} model=${m}`, errText.slice(0, 400));
+      res.end();
+      return;
+    }
+    upstream = r;
+    break;
   }
 
-  if (!phase1) {
+  if (!upstream) {
     console.error('[ai-chat] all models exhausted', lastStatus);
-    return sendJson(res, 502, { error: 'AI დროებით მიუწვდომელია.' });
-  }
-  if (!phase1.ok) {
-    const errText = await phase1.text().catch(() => '');
-    console.error(`[ai-chat] Gemini error ${phase1.status} model=${MODEL}`, errText.slice(0, 400));
-    return sendJson(res, 502, { error: 'AI დროებით მიუწვდომელია.' });
-  }
-
-  const phase1Data = await phase1.json();
-  const phase1Parts = phase1Data?.candidates?.[0]?.content?.parts ?? [];
-  const fnCallPart = phase1Parts.find((p) => p.functionCall);
-
-  // streaming text headers
-  res.statusCode = 200;
-  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-  res.setHeader('Cache-Control', 'no-store');
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-
-  // ── No function call → return text directly ──
-  if (!fnCallPart) {
-    const text = phase1Parts.filter((p) => typeof p.text === 'string').map((p) => p.text).join('');
-    if (text) res.write(text);
-    res.end();
-    return;
-  }
-
-  // ── Function call → fetch NBG rates, then stream final answer ──
-  const fnResult = await fetchNbgRates(fnCallPart.functionCall.args?.date ?? '');
-  const phase2Contents = [
-    ...contents,
-    { role: 'model', parts: [fnCallPart] },
-    { role: 'user', parts: [{ functionResponse: { name: fnCallPart.functionCall.name, response: { content: fnResult } } }] },
-  ];
-
-  const streamUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:streamGenerateContent?alt=sse&key=${apiKey}`;
-
-  let upstream;
-  try {
-    upstream = await fetch(streamUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...basePayload, contents: phase2Contents }),
-    });
-  } catch (err) {
-    console.error('[ai-chat] Gemini fetch error (phase 2)', err);
-    res.end();
-    return;
-  }
-
-  if (!upstream.ok || !upstream.body) {
-    const errText = await upstream.text().catch(() => '');
-    console.error('[ai-chat] Gemini stream error', upstream.status, errText);
     res.end();
     return;
   }

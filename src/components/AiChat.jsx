@@ -12,7 +12,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUp, Trash2, X, Ban, Check, History } from 'lucide-react';
+import { ArrowUp, Trash2, X, Ban, History, Mail, Phone } from 'lucide-react';
+
+// ── Maintenance mode — set true to block chat and show contact card ────────────
+const CHAT_MAINTENANCE = true;
 
 // ── colours ───────────────────────────────────────────────────────────────────
 const AI_BG   = '#1D2748';                           // AI bubble
@@ -188,6 +191,89 @@ const TailRight = ({ color }) => (
   </svg>
 );
 
+// ── Maintenance notice card ───────────────────────────────────────────────────
+function MaintenanceCard({ isMobile }) {
+  const navigate = useNavigate();
+  const contacts = [
+    {
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+      ),
+      label: 'WhatsApp',
+      href: 'https://wa.me/995500114090',
+      external: true,
+    },
+    { icon: <Mail size={16} />,  label: 'fins.ge@gmail.com', href: 'mailto:fins.ge@gmail.com', external: true },
+    { icon: <Phone size={16} />, label: 'კონტაქტის ფორმა',  href: '/contact',                  external: false },
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity:0, y:10, scale:0.97 }}
+      animate={{ opacity:1, y:0,  scale:1    }}
+      exit={{    opacity:0, y:6,  scale:0.97 }}
+      transition={{ duration:0.22, ease:'easeOut' }}
+      style={{
+        position: 'fixed', zIndex: 9999,
+        right:  isMobile ? '16px' : '24px',
+        left:   isMobile ? '16px' : 'auto',
+        bottom: isMobile ? '80px' : '90px',
+        width:  isMobile ? 'auto' : 'min(340px, calc(100vw - 48px))',
+        background: AI_BG,
+        borderRadius: 20,
+        border: '1px solid rgba(255,255,255,0.09)',
+        boxShadow: '0 20px 56px rgba(0,0,0,0.50), 0 4px 12px rgba(0,0,0,0.28)',
+        padding: '20px 20px 16px',
+      }}
+    >
+      <p style={{
+        color: 'rgba(255,255,255,0.80)',
+        fontSize: 14,
+        lineHeight: 1.65,
+        margin: '0 0 16px 0',
+      }}>
+        გამარჯობა! AI ჩატი ამჟამად განახლების პროცესშია და დროებით არ მუშაობს.
+        დაგვიკავშირდეთ ერთ-ერთი საშუალებით — სიამოვნებით დაგეხმარებით:
+      </p>
+      <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+        {contacts.map(({ icon, label, href, external }) => (
+          <a
+            key={label}
+            href={href}
+            {...(external ? { target:'_blank', rel:'noopener noreferrer' } : {})}
+            onClick={!external ? (e) => { e.preventDefault(); navigate('/contact'); } : undefined}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 11,
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.10)',
+              borderRadius: 12,
+              padding: '11px 14px',
+              color: 'rgba(255,255,255,0.80)',
+              textDecoration: 'none',
+              fontSize: 14, fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'background 0.15s, border-color 0.15s',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.11)';
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.20)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)';
+            }}
+          >
+            {icon}
+            <span>{label}</span>
+          </a>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
 // ── sub-components ─────────────────────────────────────────────────────────────
 function ThinkingDots() {
   return (
@@ -212,108 +298,6 @@ function Cursor() {
   );
 }
 
-// ── ContactFormBubble — inline contact form inside chat ───────────────────────
-const INPUT_STYLE = {
-  background: 'rgba(255,255,255,0.09)',
-  border: '1px solid rgba(255,255,255,0.16)',
-  borderRadius: 10,
-  padding: '8px 12px',
-  color: '#fff',
-  fontSize: 13,
-  outline: 'none',
-  width: '100%',
-  boxSizing: 'border-box',
-  fontFamily: 'inherit',
-};
-
-function ContactFormBubble({ submitted, name, phone, email, onNameChange, onPhoneChange, onEmailChange, onSubmit, sending }) {
-  function handleKey(e) { if (e.key === 'Enter') onSubmit(); }
-
-  return (
-    <motion.div
-      layout
-      initial={{ opacity:0, y:20, scale:0.9 }}
-      animate={{ opacity:1, y:0,  scale:1   }}
-      transition={{ type:'spring', stiffness:420, damping:30, mass:0.55 }}
-      style={{ display:'flex', justifyContent:'flex-start' }}
-    >
-      <div style={{ position:'relative', maxWidth:'82%' }}>
-        <TailLeft color={AI_BG} />
-        <div style={{
-          background:   AI_BG,
-          borderRadius: '18px 18px 18px 4px',
-          padding:      '14px 16px',
-          color:        '#fff',
-          fontSize:     14,
-          boxShadow:    '0 4px 16px rgba(0,0,0,0.28), 0 1px 3px rgba(0,0,0,0.18)',
-          minWidth:     210,
-          position:     'relative',
-        }}>
-          {submitted ? (
-            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'2px 0' }}>
-              <Check size={15} style={{ color:'#4ade80', flexShrink:0 }} />
-              <span style={{ lineHeight:1.5 }}>გაგზავნილია! ჩვენი გუნდი დაგიკავშირდება.</span>
-            </div>
-          ) : (
-            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-              <p style={{ margin:0, fontSize:12, opacity:0.58, lineHeight:1.4 }}>
-                შეავსეთ ფორმა — ჩვენი გუნდი დაგიკავშირდება
-              </p>
-              <input
-                className="fins-chat-input"
-                type="text"
-                placeholder="სახელი / კომპანია"
-                value={name}
-                onChange={e => onNameChange(e.target.value)}
-                onKeyDown={handleKey}
-                style={INPUT_STYLE}
-              />
-              <input
-                className="fins-chat-input"
-                type="tel"
-                placeholder="ნომერი *"
-                value={phone}
-                onChange={e => onPhoneChange(e.target.value)}
-                onKeyDown={handleKey}
-                style={INPUT_STYLE}
-              />
-              <input
-                className="fins-chat-input"
-                type="email"
-                placeholder="მეილი"
-                value={email}
-                onChange={e => onEmailChange(e.target.value)}
-                onKeyDown={handleKey}
-                style={INPUT_STYLE}
-              />
-              <motion.button
-                onClick={onSubmit}
-                disabled={!phone.trim() || sending}
-                whileHover={phone.trim() && !sending ? { scale:1.03 } : undefined}
-                whileTap={phone.trim()   && !sending ? { scale:0.96 } : undefined}
-                style={{
-                  background: !phone.trim() || sending
-                    ? 'rgba(79,107,229,0.35)'
-                    : 'linear-gradient(145deg,#4F6BE5,#3851D1)',
-                  border:       'none',
-                  borderRadius: 10,
-                  padding:      '9px',
-                  color:        '#fff',
-                  fontSize:     13,
-                  cursor:       !phone.trim() || sending ? 'not-allowed' : 'pointer',
-                  fontFamily:   'inherit',
-                  transition:   'background 0.15s',
-                }}
-              >
-                {sending ? '...' : 'გაგზავნა'}
-              </motion.button>
-            </div>
-          )}
-        </div>
-      </div>
-    </motion.div>
-  );
-}
 
 // ── main ──────────────────────────────────────────────────────────────────────
 // ── FAB shared helpers ────────────────────────────────────────────────────────
@@ -377,8 +361,6 @@ export default function AiChat() {
   const [bannedUntil,     setBannedUntil]     = useState(0);
   const [banCountdown,    setBanCountdown]    = useState(0);
   const [navOpen,         setNavOpen]         = useState(false);
-  const [formValues,      setFormValues]      = useState({ name:'', phone:'', email:'' });
-  const [formSending,     setFormSending]     = useState(false);
   const [showHistory,     setShowHistory]     = useState(false);
   const [history,         setHistory]         = useState(() => loadHistory());
   const [bookingFlow,     setBookingFlow]     = useState(null);
@@ -475,8 +457,9 @@ export default function AiChat() {
   const isBanned = banCountdown > 0;
 
 
-  // ── welcome message on first open ────────────────────────────────────────
+  // ── welcome message on first open (skip in maintenance mode) ────────────────
   useEffect(() => {
+    if (CHAT_MAINTENANCE) return;
     if (open && messages.length === 0) {
       setTimeout(() => {
         setMessages([{ role:'model', text:'გამარჯობა! რით შემიძლია დაგეხმარო?' }]);
@@ -527,60 +510,17 @@ export default function AiChat() {
     };
   }, [open, messages]);
 
-  // ── contact form submit ───────────────────────────────────────────────────
-  async function handleFormSubmit(msgIdx) {
-    if (formSending || !formValues.phone.trim()) return;
-    setFormSending(true);
-    const name    = formValues.name.trim() || '—';
-    const phone   = formValues.phone.trim();
-    const email   = formValues.email.trim();
-    const summary = messages[msgIdx]?.summary || '';
-    const msgBody = [
-      `სახელი / კომპანია: ${name}`,
-      `ნომერი: ${phone}`,
-      email ? `მეილი: ${email}` : '',
-      summary ? `\nშეჯამება:\n${summary}` : '',
-    ].filter(Boolean).join('\n');
-
-    // Web3Forms — must be called from the browser so the domain key matches
-    fetch('https://api.web3forms.com/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({
-        access_key: '17019cc7-632a-49f7-9a00-60c011b65520',
-        subject:    `FINS ჩატი — ${name} (${phone})`,
-        from_name:  'FINS AI Chat',
-        name,
-        phone,
-        email:   email || undefined,
-        message: msgBody,
-      }),
-    }).catch(() => {});
-
-    // Telegram — via server (has bot token)
-    fetch('/api/send-contact', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, phone, email: email || undefined, summary }),
-    }).catch(() => {});
-
-    setMessages(prev => prev.map((m, i) => i === msgIdx ? { ...m, submitted:true } : m));
-    setFormValues({ name:'', phone:'', email:'' });
-    setFormSending(false);
-  }
-
   // ── booking flow helpers ──────────────────────────────────────────────────
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
   function startBookingFlow() {
     setBookingSubmitted(false);
     setBookingSubmitting(false);
     setBookingFlow(null);
-    setMessages(prev => [...prev, { role:'model', text:'კარგი.' }]);
+    setMessages(prev => [...prev, { role:'model', text: 'გასაგებია.' }]);
+    setBookingFlow({ step:'awaiting_name', data:{ name:'', contactType:null, contactValue:'', comment:'' } });
     setTimeout(() => {
-      setMessages(prev => [...prev, { role:'model', text:'მოდი, ყველაფერი მოვაწყოთ.' }]);
-      setBookingFlow({ step:'awaiting_name', data:{ name:'', contactType:null, contactValue:'', comment:'' } });
-      setTimeout(() => {
-        setMessages(prev => [...prev, { role:'model', text:'შენი სახელი ან კომპანიის სახელი?' }]);
-      }, 680);
+      setMessages(prev => [...prev, { role:'model', text: pick(['მითხარი შენი ან შენი კომპანიის სახელი.', 'სახელი ან კომპანია?', 'ვინ ხარ ან სად ხარ?', 'სახელი — შენი ან კომპანიის.']) }]);
     }, 680);
   }
   startBookingFlowRef.current = startBookingFlow;
@@ -589,7 +529,7 @@ export default function AiChat() {
     setBookingFlow({ step:'done', data:finalData });
     setTimeout(() => {
       setMessages(prev => [...prev,
-        { role:'model', text:'ყველაფერი ჩაიწერა.' },
+        { role:'model', text: pick(['ყველაფერი ჩაიწერა.', 'მზადაა.', 'გავაგზავნე.', 'ჩაიწერა.']) },
         { role:'send_btn', data: finalData, submitted: false },
       ]);
     }, 420);
@@ -664,7 +604,7 @@ export default function AiChat() {
     setBookingFlow({ step:'comment_decision', data: newData });
     setTimeout(() => {
       setMessages(prev => [...prev,
-        { role:'model', text:'მშვენიერია! გინდა კომენტარი დაუმატო?' },
+        { role:'model', text: 'კომენტარს დაურთავ?' },
         { role:'choice', options:['კი, დავამატებ', 'არა, ასე გაგზავნე'], handled:false },
       ]);
     }, 420);
@@ -674,7 +614,7 @@ export default function AiChat() {
     setBookingFlow({ step: confirmStep, data: { ...data, pendingValue: text } });
     setTimeout(() => {
       setMessages(prev => [...prev,
-        { role:'model', text:'დარწმუნებული ხარ, რომ სწორია? თავიდან ხომ არ ცდი?' },
+        { role:'model', text: pick(['სწორია?', 'დარწმუნებული ხარ?', 'ეს სწორია?', 'თავიდან ხომ არ ცდი?']) },
         { role:'choice', options:['თავიდან ცდა', 'არსებულის გამოყენება'], handled:false },
       ]);
     }, 420);
@@ -689,7 +629,7 @@ export default function AiChat() {
         setBookingFlow({ step:'awaiting_contact_type', data: newData });
         setTimeout(() => {
           setMessages(prev => [...prev,
-            { role:'model', text:'სად გამოგიკავშირდეთ — ტელეფონით თუ ელ-ფოსტით?' },
+            { role:'model', text: pick(['ტელეფონი ან მეილი — რომელი ჯობია?', 'სად გამოგიკავშირდეთ?', 'როგორ დაგიკავშირდეთ — ნომრით თუ მეილით?', 'ტელ. ნომერი თუ მეილი?']) },
             { role:'choice', options:['ტელეფონით', 'ელ-ფოსტით'], handled:false },
           ]);
         }, 420);
@@ -734,23 +674,23 @@ export default function AiChat() {
     if (step === 'awaiting_contact_type') {
       if (choice === 'ტელეფონით') {
         setBookingFlow({ step:'awaiting_phone', data:{ ...data, contactType:'phone' } });
-        setTimeout(() => setMessages(prev => [...prev, { role:'model', text:'კარგი, ნომერი?' }]), 420);
+        setTimeout(() => setMessages(prev => [...prev, { role:'model', text: pick(['ნომერი?', 'გამომიგზავნე ნომერი.', 'ნომერი გამომიგზავნე.']) }]), 420);
       } else {
         setBookingFlow({ step:'awaiting_email', data:{ ...data, contactType:'email' } });
-        setTimeout(() => setMessages(prev => [...prev, { role:'model', text:'კარგი, ელ-ფოსტა?' }]), 420);
+        setTimeout(() => setMessages(prev => [...prev, { role:'model', text: pick(['მეილი?', 'ელ-ფოსტა?', 'გამომიგზავნე მეილი.']) }]), 420);
       }
     } else if (step === 'confirming_phone' || step === 'confirming_email') {
     const isPhone = step === 'confirming_phone';
     if (choice === 'თავიდან ცდა') {
       setBookingFlow({ step: isPhone ? 'awaiting_phone' : 'awaiting_email', data: { ...data, pendingValue: undefined } });
-      setTimeout(() => setMessages(prev => [...prev, { role:'model', text: isPhone ? 'კარგი, ნომერი?' : 'კარგი, ელ-ფოსტა?' }]), 420);
+      setTimeout(() => setMessages(prev => [...prev, { role:'model', text: isPhone ? pick(['ნომერი?', 'გამომიგზავნე ნომერი.']) : pick(['მეილი?', 'გამომიგზავნე მეილი.']) }]), 420);
     } else {
       advanceAfterContact(data.pendingValue ?? '', data);
     }
   } else if (step === 'comment_decision') {
       if (choice === 'კი, დავამატებ') {
         setBookingFlow({ step:'awaiting_comment', data });
-        setTimeout(() => setMessages(prev => [...prev, { role:'model', text:'დაწერე:' }]), 420);
+        setTimeout(() => setMessages(prev => [...prev, { role:'model', text: pick(['დაწერე.', 'კარგი, დაწერე.', 'გამომიგზავნე.']) }]), 420);
       } else {
         finishBookingFlow(data);
       }
@@ -779,10 +719,10 @@ export default function AiChat() {
         });
         if (isPhone) {
           setBookingFlow({ step:'awaiting_phone', data:{ ...data, contactType:'phone' } });
-          setTimeout(() => setMessages(prev => [...prev, { role:'model', text:'კარგი, ნომერი?' }]), 420);
+          setTimeout(() => setMessages(prev => [...prev, { role:'model', text: pick(['ნომერი?', 'გამომიგზავნე ნომერი.', 'ნომერი გამომიგზავნე.']) }]), 420);
         } else {
           setBookingFlow({ step:'awaiting_email', data:{ ...data, contactType:'email' } });
-          setTimeout(() => setMessages(prev => [...prev, { role:'model', text:'კარგი, ელ-ფოსტა?' }]), 420);
+          setTimeout(() => setMessages(prev => [...prev, { role:'model', text: pick(['მეილი?', 'ელ-ფოსტა?', 'გამომიგზავნე მეილი.']) }]), 420);
         }
         return;
       }
@@ -859,14 +799,6 @@ export default function AiChat() {
           fetch('/api/telegram-notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).catch(()=>{});
         } catch {}
       }
-      const formMatch = acc.match(/\[\[SHOW_CONTACT_FORM:([\s\S]*?)\]\]/);
-      if (formMatch) {
-        try {
-          const d = JSON.parse(formMatch[1]);
-          setMessages(prev => [...prev, { role:'form', summary: d.summary||'', submitted:false }]);
-          setFormValues({ name:'', phone:'' });
-        } catch {}
-      }
       if (acc.includes('[[START_BOOKING_FLOW]]')) {
         startBookingFlow();
       }
@@ -920,8 +852,13 @@ export default function AiChat() {
         }} />
       )}
 
+      {/* ── Maintenance card — replaces chat bubbles when CHAT_MAINTENANCE is on ── */}
       <AnimatePresence>
-        {open && messages.length > 0 && (
+        {open && CHAT_MAINTENANCE && <MaintenanceCard isMobile={isMobile} />}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {open && !CHAT_MAINTENANCE && messages.length > 0 && (
           <motion.div
             ref={msgAreaRef}
             onClick={() => inputRef.current?.focus()}
@@ -977,20 +914,7 @@ export default function AiChat() {
             {/* spacer pushes messages to the bottom; scroll still works upward */}
             <div style={{ flex: '1 1 auto' }} />
             {messages.map((msg, i) => (
-              msg.role === 'form' ? (
-                <ContactFormBubble
-                  key={`form-${i}`}
-                  submitted={msg.submitted}
-                  name={formValues.name}
-                  phone={formValues.phone}
-                  email={formValues.email}
-                  onNameChange={v => setFormValues(p => ({ ...p, name:v }))}
-                  onPhoneChange={v => setFormValues(p => ({ ...p, phone:v }))}
-                  onEmailChange={v => setFormValues(p => ({ ...p, email:v }))}
-                  onSubmit={() => handleFormSubmit(i)}
-                  sending={formSending}
-                />
-              ) : msg.role === 'send_btn' ? (
+              msg.role === 'send_btn' ? (
                 <motion.div
                   key={`sendbtn-${i}`}
                   layout
@@ -1143,7 +1067,22 @@ export default function AiChat() {
                 exit={{    opacity:0, y:10, scale:0.93  }}
                 transition={{ type:'spring', stiffness:460, damping:30, mass:0.5 }}
               >
-                {isBanned ? (
+                {CHAT_MAINTENANCE ? (
+                  /* maintenance — blocked input */
+                  <div style={{
+                    display:'flex', alignItems:'center', gap:8,
+                    background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.10)',
+                    borderRadius:999,
+                    padding:'9px 20px',
+                    width: isMobile && open ? 'auto' : 'min(288px, calc(100vw - 82px))',
+                    flex: isMobile && open ? '1' : 'none',
+                    backdropFilter:'blur(16px)', WebkitBackdropFilter:'blur(16px)',
+                  }}>
+                    <span style={{ color:'rgba(255,255,255,0.35)', fontSize:14, fontStyle:'italic', userSelect:'none' }}>
+                      ჩატი დროებით გამორთულია
+                    </span>
+                  </div>
+                ) : isBanned ? (
                   /* ban pill */
                   <div style={{
                     display:'flex', alignItems:'center', gap:8,

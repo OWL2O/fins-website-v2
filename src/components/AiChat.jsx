@@ -199,150 +199,135 @@ const WhatsAppIcon = ({ size = 16 }) => (
 );
 
 // ── Maintenance notice card ───────────────────────────────────────────────────
-function MaintenanceCard({ isMobile }) {
+function MaintenanceCard({ isMobile, onClose }) {
   const navigate = useNavigate();
+
+  // Shared button style — all three identical so nothing fights for attention
+  const btnBase = {
+    display: 'flex', alignItems: 'center', gap: 10,
+    background: 'rgba(255,255,255,0.06)',
+    border: '1px solid rgba(255,255,255,0.11)',
+    borderRadius: 10,
+    padding: '10px 14px',
+    color: 'rgba(255,255,255,0.75)',
+    textDecoration: 'none',
+    fontSize: 13.5, fontWeight: 500,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    transition: 'background 0.15s, border-color 0.15s, color 0.15s',
+    width: '100%', boxSizing: 'border-box',
+  };
+  const btnHoverIn  = e => {
+    e.currentTarget.style.background    = 'rgba(255,255,255,0.11)';
+    e.currentTarget.style.borderColor   = 'rgba(255,255,255,0.20)';
+    e.currentTarget.style.color         = 'rgba(255,255,255,0.95)';
+  };
+  const btnHoverOut = e => {
+    e.currentTarget.style.background    = 'rgba(255,255,255,0.06)';
+    e.currentTarget.style.borderColor   = 'rgba(255,255,255,0.11)';
+    e.currentTarget.style.color         = 'rgba(255,255,255,0.75)';
+  };
 
   return (
     <motion.div
-      initial={{ opacity:0, y:12, scale:0.96 }}
+      initial={{ opacity:0, y:14, scale:0.95 }}
       animate={{ opacity:1, y:0,  scale:1    }}
-      exit={{    opacity:0, y:6,  scale:0.96 }}
-      transition={{ duration:0.24, ease:'easeOut' }}
+      exit={{    opacity:0, y:8,  scale:0.97 }}
+      transition={{ duration:0.22, ease:[0.22, 1, 0.36, 1] }}
       style={{
         position: 'fixed', zIndex: 9999,
         right:  isMobile ? '12px' : '24px',
         left:   isMobile ? '12px' : 'auto',
-        bottom: isMobile ? '76px' : '86px',
-        width:  isMobile ? 'auto' : 'min(340px, calc(100vw - 48px))',
-        background: 'linear-gradient(160deg, #1e2c50 0%, #192242 100%)',
-        borderRadius: 20,
-        border: '1px solid rgba(255,255,255,0.10)',
-        boxShadow: '0 24px 64px rgba(0,0,0,0.55), 0 4px 16px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.07)',
+        // Sits just above the FAB (48px) + bottom offset (24px) + gap (12px)
+        bottom: 'calc(max(24px, env(safe-area-inset-bottom)) + 62px)',
+        width:  isMobile ? 'auto' : 'min(330px, calc(100vw - 48px))',
+        background: '#111827',
+        borderRadius: 16,
+        border: '1px solid rgba(255,255,255,0.09)',
+        boxShadow: '0 24px 64px rgba(0,0,0,0.65), 0 4px 16px rgba(0,0,0,0.35)',
         overflow: 'hidden',
       }}
     >
-      {/* accent stripe */}
+      {/* ── Header ── */}
       <div style={{
-        height: 3,
-        background: 'linear-gradient(90deg, #3D64FE 0%, #6B8BFF 60%, #3D64FE 100%)',
-        backgroundSize: '200% 100%',
-      }} />
-
-      <div style={{ padding: '16px 18px 18px' }}>
-        {/* header label */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 7,
-          marginBottom: 12,
-        }}>
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+        padding: '18px 18px 0',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{
-            display: 'inline-block', width: 7, height: 7, borderRadius: '50%',
+            display: 'inline-block', flexShrink: 0,
+            width: 7, height: 7, borderRadius: '50%',
             background: '#F59E0B',
-            boxShadow: '0 0 8px rgba(245,158,11,0.70)',
+            marginTop: 1,
           }} />
           <span style={{
-            fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
-            textTransform: 'uppercase', color: 'rgba(255,255,255,0.40)',
+            fontSize: 11, fontWeight: 700, letterSpacing: '0.09em',
+            textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)',
           }}>
             ტექნიკური განახლება
           </span>
         </div>
 
-        {/* body text */}
-        <p style={{
-          color: 'rgba(255,255,255,0.78)',
-          fontSize: 13.5,
-          lineHeight: 1.68,
-          margin: '0 0 16px 0',
-          letterSpacing: '0.01em',
-        }}>
-          AI ჩატი ამჟამად განახლების პროცესშია და დროებით არ მუშაობს.
-          დაგვიკავშირდეთ ერთ-ერთი საშუალებით — სიამოვნებით დაგეხმარებით:
-        </p>
+        {/* X close — subtle, premium */}
+        <button
+          onClick={onClose}
+          style={{
+            flexShrink: 0, marginTop: -2, marginRight: -4,
+            width: 28, height: 28, borderRadius: '50%',
+            border: 'none', background: 'rgba(255,255,255,0.05)',
+            color: 'rgba(255,255,255,0.35)',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'background 0.15s, color 0.15s',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.12)';
+            e.currentTarget.style.color      = 'rgba(255,255,255,0.75)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+            e.currentTarget.style.color      = 'rgba(255,255,255,0.35)';
+          }}
+        >
+          <X size={13} />
+        </button>
+      </div>
 
-        {/* contact buttons */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      {/* ── Body text ── */}
+      <p style={{
+        color: 'rgba(255,255,255,0.65)',
+        fontSize: 13.5,
+        lineHeight: 1.70,
+        margin: '12px 18px 18px',
+        letterSpacing: '0.01em',
+      }}>
+        AI ჩატი ამჟამად განახლების პროცესშია და დროებით არ მუშაობს.
+        დაგვიკავშირდეთ ერთ-ერთი საშუალებით — სიამოვნებით დაგეხმარებით:
+      </p>
 
-          {/* WhatsApp — primary (green) */}
-          <a
-            href="https://wa.me/995500114090"
-            target="_blank" rel="noopener noreferrer"
-            style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              background: '#1DAA61',
-              borderRadius: 11,
-              padding: '11px 14px',
-              color: '#fff',
-              textDecoration: 'none',
-              fontSize: 13.5, fontWeight: 600,
-              cursor: 'pointer',
-              boxShadow: '0 4px 18px rgba(29,170,97,0.30)',
-              transition: 'filter 0.15s',
-            }}
-            onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.10)'}
-            onMouseLeave={e => e.currentTarget.style.filter = 'none'}
-          >
-            <WhatsAppIcon size={16} />
-            <span>WhatsApp</span>
-          </a>
+      {/* ── Divider ── */}
+      <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '0 0 14px' }} />
 
-          {/* Email — secondary (blue tint) */}
-          <a
-            href="mailto:fins.ge@gmail.com"
-            style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              background: 'rgba(61,100,254,0.18)',
-              border: '1px solid rgba(61,100,254,0.35)',
-              borderRadius: 11,
-              padding: '10px 14px',
-              color: 'rgba(255,255,255,0.82)',
-              textDecoration: 'none',
-              fontSize: 13.5, fontWeight: 500,
-              cursor: 'pointer',
-              transition: 'background 0.15s, border-color 0.15s',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = 'rgba(61,100,254,0.28)';
-              e.currentTarget.style.borderColor = 'rgba(61,100,254,0.55)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = 'rgba(61,100,254,0.18)';
-              e.currentTarget.style.borderColor = 'rgba(61,100,254,0.35)';
-            }}
-          >
-            <Mail size={15} />
-            <span>fins.ge@gmail.com</span>
-          </a>
+      {/* ── Contact buttons — identical style, no color hierarchy ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '0 14px 16px' }}>
 
-          {/* Contact form — ghost */}
-          <a
-            href="/contact"
-            onClick={e => { e.preventDefault(); navigate('/contact'); }}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.11)',
-              borderRadius: 11,
-              padding: '10px 14px',
-              color: 'rgba(255,255,255,0.58)',
-              textDecoration: 'none',
-              fontSize: 13.5, fontWeight: 500,
-              cursor: 'pointer',
-              transition: 'background 0.15s, color 0.15s',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.09)';
-              e.currentTarget.style.color = 'rgba(255,255,255,0.80)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-              e.currentTarget.style.color = 'rgba(255,255,255,0.58)';
-            }}
-          >
-            <Phone size={15} />
-            <span>კონტაქტის ფორმა</span>
-          </a>
+        <a href="https://wa.me/995500114090" target="_blank" rel="noopener noreferrer"
+          style={btnBase} onMouseEnter={btnHoverIn} onMouseLeave={btnHoverOut}>
+          <WhatsAppIcon size={15} />
+          <span>WhatsApp</span>
+        </a>
 
-        </div>
+        <a href="mailto:fins.ge@gmail.com"
+          style={btnBase} onMouseEnter={btnHoverIn} onMouseLeave={btnHoverOut}>
+          <Mail size={15} />
+          <span>fins.ge@gmail.com</span>
+        </a>
+
+        <a href="/contact" onClick={e => { e.preventDefault(); navigate('/contact'); }}
+          style={btnBase} onMouseEnter={btnHoverIn} onMouseLeave={btnHoverOut}>
+          <Phone size={15} />
+          <span>კონტაქტის ფორმა</span>
+        </a>
+
       </div>
     </motion.div>
   );
@@ -928,7 +913,7 @@ export default function AiChat() {
 
       {/* ── Maintenance card — replaces chat bubbles when CHAT_MAINTENANCE is on ── */}
       <AnimatePresence>
-        {open && CHAT_MAINTENANCE && <MaintenanceCard isMobile={isMobile} />}
+        {open && CHAT_MAINTENANCE && <MaintenanceCard isMobile={isMobile} onClose={() => setOpen(false)} />}
       </AnimatePresence>
 
       <AnimatePresence>
@@ -1113,7 +1098,7 @@ export default function AiChat() {
         position:'fixed', zIndex:10000,
         // Mobile + open: full-width bar at very bottom
         // Otherwise: right-anchored FAB area
-        ...(isMobile && open ? {
+        ...(isMobile && open && !CHAT_MAINTENANCE ? {
           left: 0, right: 0, bottom: 0,
           padding: '10px 16px max(14px, env(safe-area-inset-bottom))',
           background: 'rgba(10,14,26,0.97)',
@@ -1126,15 +1111,15 @@ export default function AiChat() {
       }}>
         <div style={{
           display:'flex',
-          flexDirection: isMobile && open ? 'row' : 'column',
+          flexDirection: isMobile && open && !CHAT_MAINTENANCE ? 'row' : 'column',
           alignItems:'flex-end',
           gap:'10px',
-          width: isMobile && open ? '100%' : 'auto',
+          width: isMobile && open && !CHAT_MAINTENANCE ? '100%' : 'auto',
         }}>
 
-          {/* ── Input pill ── */}
+          {/* ── Input pill — hidden entirely during maintenance ── */}
           <AnimatePresence>
-            {open && (
+            {open && !CHAT_MAINTENANCE && (
               <motion.div
                 initial={{ opacity:0, y:18, scale:0.88 }}
                 animate={{ opacity:1, y:0,  scale:1    }}

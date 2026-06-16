@@ -12,7 +12,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUp, Trash2, X, Ban, History, Mail, Phone } from 'lucide-react';
+import { ArrowUp, Trash2, X, Ban, History, Mail, Phone, Lock } from 'lucide-react';
 
 // ── Maintenance mode — set true to block chat and show contact card ────────────
 const CHAT_MAINTENANCE = true;
@@ -191,84 +191,158 @@ const TailRight = ({ color }) => (
   </svg>
 );
 
+// ── WhatsApp icon SVG ─────────────────────────────────────────────────────────
+const WhatsAppIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+);
+
 // ── Maintenance notice card ───────────────────────────────────────────────────
 function MaintenanceCard({ isMobile }) {
   const navigate = useNavigate();
-  const contacts = [
-    {
-      icon: (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-        </svg>
-      ),
-      label: 'WhatsApp',
-      href: 'https://wa.me/995500114090',
-      external: true,
-    },
-    { icon: <Mail size={16} />,  label: 'fins.ge@gmail.com', href: 'mailto:fins.ge@gmail.com', external: true },
-    { icon: <Phone size={16} />, label: 'კონტაქტის ფორმა',  href: '/contact',                  external: false },
-  ];
 
   return (
     <motion.div
-      initial={{ opacity:0, y:10, scale:0.97 }}
+      initial={{ opacity:0, y:12, scale:0.96 }}
       animate={{ opacity:1, y:0,  scale:1    }}
-      exit={{    opacity:0, y:6,  scale:0.97 }}
-      transition={{ duration:0.22, ease:'easeOut' }}
+      exit={{    opacity:0, y:6,  scale:0.96 }}
+      transition={{ duration:0.24, ease:'easeOut' }}
       style={{
         position: 'fixed', zIndex: 9999,
-        right:  isMobile ? '16px' : '24px',
-        left:   isMobile ? '16px' : 'auto',
-        bottom: isMobile ? '80px' : '90px',
+        right:  isMobile ? '12px' : '24px',
+        left:   isMobile ? '12px' : 'auto',
+        bottom: isMobile ? '76px' : '86px',
         width:  isMobile ? 'auto' : 'min(340px, calc(100vw - 48px))',
-        background: AI_BG,
+        background: 'linear-gradient(160deg, #1e2c50 0%, #192242 100%)',
         borderRadius: 20,
-        border: '1px solid rgba(255,255,255,0.09)',
-        boxShadow: '0 20px 56px rgba(0,0,0,0.50), 0 4px 12px rgba(0,0,0,0.28)',
-        padding: '20px 20px 16px',
+        border: '1px solid rgba(255,255,255,0.10)',
+        boxShadow: '0 24px 64px rgba(0,0,0,0.55), 0 4px 16px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.07)',
+        overflow: 'hidden',
       }}
     >
-      <p style={{
-        color: 'rgba(255,255,255,0.80)',
-        fontSize: 14,
-        lineHeight: 1.65,
-        margin: '0 0 16px 0',
-      }}>
-        გამარჯობა! AI ჩატი ამჟამად განახლების პროცესშია და დროებით არ მუშაობს.
-        დაგვიკავშირდეთ ერთ-ერთი საშუალებით — სიამოვნებით დაგეხმარებით:
-      </p>
-      <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-        {contacts.map(({ icon, label, href, external }) => (
+      {/* accent stripe */}
+      <div style={{
+        height: 3,
+        background: 'linear-gradient(90deg, #3D64FE 0%, #6B8BFF 60%, #3D64FE 100%)',
+        backgroundSize: '200% 100%',
+      }} />
+
+      <div style={{ padding: '16px 18px 18px' }}>
+        {/* header label */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 7,
+          marginBottom: 12,
+        }}>
+          <span style={{
+            display: 'inline-block', width: 7, height: 7, borderRadius: '50%',
+            background: '#F59E0B',
+            boxShadow: '0 0 8px rgba(245,158,11,0.70)',
+          }} />
+          <span style={{
+            fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
+            textTransform: 'uppercase', color: 'rgba(255,255,255,0.40)',
+          }}>
+            ტექნიკური განახლება
+          </span>
+        </div>
+
+        {/* body text */}
+        <p style={{
+          color: 'rgba(255,255,255,0.78)',
+          fontSize: 13.5,
+          lineHeight: 1.68,
+          margin: '0 0 16px 0',
+          letterSpacing: '0.01em',
+        }}>
+          AI ჩატი ამჟამად განახლების პროცესშია და დროებით არ მუშაობს.
+          დაგვიკავშირდეთ ერთ-ერთი საშუალებით — სიამოვნებით დაგეხმარებით:
+        </p>
+
+        {/* contact buttons */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+
+          {/* WhatsApp — primary (green) */}
           <a
-            key={label}
-            href={href}
-            {...(external ? { target:'_blank', rel:'noopener noreferrer' } : {})}
-            onClick={!external ? (e) => { e.preventDefault(); navigate('/contact'); } : undefined}
+            href="https://wa.me/995500114090"
+            target="_blank" rel="noopener noreferrer"
             style={{
-              display: 'flex', alignItems: 'center', gap: 11,
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.10)',
-              borderRadius: 12,
+              display: 'flex', alignItems: 'center', gap: 10,
+              background: '#1DAA61',
+              borderRadius: 11,
               padding: '11px 14px',
-              color: 'rgba(255,255,255,0.80)',
+              color: '#fff',
               textDecoration: 'none',
-              fontSize: 14, fontWeight: 500,
+              fontSize: 13.5, fontWeight: 600,
+              cursor: 'pointer',
+              boxShadow: '0 4px 18px rgba(29,170,97,0.30)',
+              transition: 'filter 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.10)'}
+            onMouseLeave={e => e.currentTarget.style.filter = 'none'}
+          >
+            <WhatsAppIcon size={16} />
+            <span>WhatsApp</span>
+          </a>
+
+          {/* Email — secondary (blue tint) */}
+          <a
+            href="mailto:fins.ge@gmail.com"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              background: 'rgba(61,100,254,0.18)',
+              border: '1px solid rgba(61,100,254,0.35)',
+              borderRadius: 11,
+              padding: '10px 14px',
+              color: 'rgba(255,255,255,0.82)',
+              textDecoration: 'none',
+              fontSize: 13.5, fontWeight: 500,
               cursor: 'pointer',
               transition: 'background 0.15s, border-color 0.15s',
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.11)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.20)';
+              e.currentTarget.style.background = 'rgba(61,100,254,0.28)';
+              e.currentTarget.style.borderColor = 'rgba(61,100,254,0.55)';
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)';
+              e.currentTarget.style.background = 'rgba(61,100,254,0.18)';
+              e.currentTarget.style.borderColor = 'rgba(61,100,254,0.35)';
             }}
           >
-            {icon}
-            <span>{label}</span>
+            <Mail size={15} />
+            <span>fins.ge@gmail.com</span>
           </a>
-        ))}
+
+          {/* Contact form — ghost */}
+          <a
+            href="/contact"
+            onClick={e => { e.preventDefault(); navigate('/contact'); }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.11)',
+              borderRadius: 11,
+              padding: '10px 14px',
+              color: 'rgba(255,255,255,0.58)',
+              textDecoration: 'none',
+              fontSize: 13.5, fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'background 0.15s, color 0.15s',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.09)';
+              e.currentTarget.style.color = 'rgba(255,255,255,0.80)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+              e.currentTarget.style.color = 'rgba(255,255,255,0.58)';
+            }}
+          >
+            <Phone size={15} />
+            <span>კონტაქტის ფორმა</span>
+          </a>
+
+        </div>
       </div>
     </motion.div>
   );
@@ -1068,19 +1142,33 @@ export default function AiChat() {
                 transition={{ type:'spring', stiffness:460, damping:30, mass:0.5 }}
               >
                 {CHAT_MAINTENANCE ? (
-                  /* maintenance — blocked input */
+                  /* maintenance — input pill locked to match the real pill's shape */
                   <div style={{
-                    display:'flex', alignItems:'center', gap:8,
-                    background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.10)',
+                    display:'flex', alignItems:'center', gap:6,
+                    background:'rgba(255,255,255,0.92)',
                     borderRadius:999,
-                    padding:'9px 20px',
+                    padding:'7px 7px 7px 16px',
                     width: isMobile && open ? 'auto' : 'min(288px, calc(100vw - 82px))',
                     flex: isMobile && open ? '1' : 'none',
-                    backdropFilter:'blur(16px)', WebkitBackdropFilter:'blur(16px)',
+                    boxShadow:'0 8px 32px rgba(0,0,0,0.14)',
+                    cursor: 'not-allowed',
+                    pointerEvents: 'none',
+                    opacity: 0.55,
                   }}>
-                    <span style={{ color:'rgba(255,255,255,0.35)', fontSize:14, fontStyle:'italic', userSelect:'none' }}>
-                      ჩატი დროებით გამორთულია
+                    <span style={{
+                      flex:1, fontSize:14, color:'#6B7280', fontFamily:'inherit',
+                      userSelect:'none',
+                    }}>
+                      შეტყობინება...
                     </span>
+                    <div style={{
+                      flexShrink:0, width:32, height:32, borderRadius:'50%',
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      background:'rgba(0,0,0,0.06)',
+                      color:'rgba(0,0,0,0.28)',
+                    }}>
+                      <Lock size={14} />
+                    </div>
                   </div>
                 ) : isBanned ? (
                   /* ban pill */
